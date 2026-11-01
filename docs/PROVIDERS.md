@@ -165,6 +165,24 @@ The bundled asset came from `@earendil-works/pi-ai` 1.4.0, which is MIT licensed
 
 The provider list and the exclusion list are arrays in [`scripts/update-providers.mjs`](../scripts/update-providers.mjs). Adding a provider is one entry plus a wire choice. The script stops on a missing model bucket, an empty model list, a model without a context window or a bad effort mapping, so a broken provider halts the run.
 
+## What it looks like
+
+These captures come from the debug build on an API 36 emulator, running against the local stub. The model in every capture is `stub-teach`.
+
+![A probe question at the start of a lesson](screenshots/providers/lesson-probe.png)
+
+The probe that opens a lesson.
+
+![A provider rejection that names the field](screenshots/providers/provider-error.png)
+
+A provider 400 that names the rejected field.
+
+![A lesson that reached finish_lesson](screenshots/providers/session-ended.png)
+
+A lesson that reached `finish_lesson`.
+
+The provider settings screen sets `FLAG_SECURE`, so a screenshot of that screen is black. Its proof is a UI dump instead.
+
 ## Verification status
 
 [`ProviderWireTest.kt`](../app/src/test/java/com/kkgosu/reasoned/ProviderWireTest.kt) exercises request translation and stream parsing with canned provider streams. It has 12 tests, and all 12 pass. They cover the Chat, Anthropic and Gemini request translators and their stream parsers, the provider registry, the connection ids and the custom endpoint URL rule.

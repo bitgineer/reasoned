@@ -63,6 +63,7 @@ import me.grishka.appkit.fragments.ToolbarFragment
 
 class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     private class SessionViews(val root: View) {
+        val lessonTranscript: View = root.findViewById(R.id.lesson_transcript)
         val lessonList: RecyclerView = root.findViewById(R.id.lesson_list)
         val lessonStatus: TextView = root.findViewById(R.id.lesson_status)
         val knowledgeStatus: TextView = root.findViewById(R.id.knowledge_status)
@@ -95,6 +96,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     private var rendering = false
     private var loadingModels = false
     private var imeAnimations = 0
+    private var imeVisible = false
     private var followingTail = false
     private val app get() = activity.application as ReasonedApplication
     private val sample get() = BuildConfig.DEBUG && arguments?.getBoolean("sample") == true
@@ -355,6 +357,9 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         // bottom until onProgress supplies the actual frame, instead of jumping to the final layout.
         if (imeAnimations > 0 && root != null)
             root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, bottom)
+        // The IME inset is the keyboard signal on 30+; below that adjustResize owns the layout.
+        if (Build.VERSION.SDK_INT >= 30)
+            setImeVisible(insets.isVisible(WindowInsets.Type.ime()))
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -445,6 +450,8 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         runtime.stop()
         scope?.cancel(); scope = null
         loadingModels = false
+        imeVisible = false
+        updateTranscriptVisibility()
         super.onHidden()
     }
 
@@ -453,6 +460,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         dialog?.dismiss(); dialog = null
         if (Build.VERSION.SDK_INT >= 30) view?.setWindowInsetsAnimationCallback(null)
         imeAnimations = 0
+        imeVisible = false
         followingTail = false
         pageViews?.let {
             it.scrollButton.animate().withEndAction(null).cancel()
@@ -543,6 +551,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
                 })
             }
             questionPanel.visibility = if (expanded) View.VISIBLE else View.GONE
+            updateTranscriptVisibility()
             updateScrollButton(views)
             revealQuestion.visibility =
                 if (question != null && !expanded) View.VISIBLE else View.GONE
@@ -872,6 +881,19 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         }
     }
 
+    private fun setImeVisible(visible: Boolean) {
+        if (visible == imeVisible) return
+        imeVisible = visible
+        updateTranscriptVisibility()
+    }
+
+    /** An open question card takes the transcript's half while the keyboard holds the other. */
+    private fun updateTranscriptVisibility() {
+        val views = pageViews ?: return
+        views.lessonTranscript.visibility =
+            if (imeVisible && views.questionPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+    }
+
     private fun updateScrollButton(views: SessionViews) {
         val button = views.scrollButton
         val show = views.lessonList.canScrollVertically(1) && views.questionPanel.visibility != View.VISIBLE
@@ -913,6 +935,8 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     }
 
     private fun alignTranscriptEnd(list: RecyclerView) {
+        // A hidden transcript has no laid-out row to align, and scrolling it would move the position it restores.
+        if (list.visibility != View.VISIBLE) return
         val manager = list.layoutManager as LinearLayoutManager
         val row = manager.findViewByPosition(adapter.itemCount - 1) ?: return
         if (list.canScrollVertically(1))

@@ -22,6 +22,7 @@ import com.kkgosu.reasoned.model.LessonDisplayItem.Role
 import com.kkgosu.reasoned.model.LessonDisplayItem.TextDisplayItem
 import com.kkgosu.reasoned.ui.text.MarkdownContentView
 import com.kkgosu.reasoned.ui.text.markdownBody
+import com.kkgosu.reasoned.ui.text.repairLatin1Escapes
 import com.kkgosu.reasoned.ui.text.setLessonMarkdown
 import com.kkgosu.reasoned.ui.text.setToolMarkdown
 import me.grishka.appkit.views.UsableRecyclerView
@@ -153,7 +154,7 @@ class LessonAdapter(private val markdown: io.noties.markwon.Markwon? = null) :
                 else markdown.setLessonMarkdown(text, item.text)
             } else {
                 (text.parent as? MarkdownContentView)?.reset()
-                text.text = item.text
+                text.text = repairLatin1Escapes(item.text)
             }
         }
     }

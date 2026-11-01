@@ -23,7 +23,7 @@ import org.commonmark.node.Node
 import org.commonmark.node.Paragraph
 
 internal fun Markwon.setLessonMarkdown(view: TextView, source: String) =
-    setLessonTree(view, parse(source))
+    setLessonTree(view, parse(repairLatin1Escapes(source)))
 
 internal fun Markwon.setLessonTree(view: TextView, tree: Node) {
     val container = view.parent as? MarkdownContentView

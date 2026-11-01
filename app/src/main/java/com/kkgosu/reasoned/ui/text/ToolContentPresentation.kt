@@ -17,7 +17,7 @@ import org.scilab.forge.jlatexmath.TeXFormula
  * CommonMark owns code boundaries (including nested lists/quotes); we never guess them with regex.
  * Document escapes become visible line breaks, not reparsed Markdown or executable markup. */
 internal fun Markwon.setToolMarkdown(view: TextView, source: String) {
-    val tree = parse(source)
+    val tree = parse(repairLatin1Escapes(source))
     ToolContentPresentation.recover(tree)
     setLessonTree(view, tree)
 }

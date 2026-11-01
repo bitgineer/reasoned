@@ -26,7 +26,8 @@ internal class WireProvider(
     override suspend fun respond(request: JSONObject, delta: suspend (String) -> Unit): JSONObject {
         val modelId = request.optString("model")
         if (!modelId.matches(MODEL_ID)) throw ProviderFailure("model_id_invalid")
-        val model = provider.model(modelId) ?: ProviderModel(modelId, modelId, 0, 0, emptyList())
+        val model = Providers.model(provider.id, modelId)
+            ?: ProviderModel(modelId, modelId, 0, 0, emptyList())
         val payload = when (provider.wire) {
             Wire.RESPONSES -> responsesPayload(request, modelId, model)
             Wire.CHAT -> ChatWire.request(request, model, modelId)

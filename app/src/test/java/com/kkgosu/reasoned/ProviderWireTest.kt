@@ -5,6 +5,7 @@ import com.kkgosu.reasoned.api.ChatWire
 import com.kkgosu.reasoned.api.Connections
 import com.kkgosu.reasoned.api.GeminiWire
 import com.kkgosu.reasoned.api.ModelCompat
+import com.kkgosu.reasoned.api.Provider
 import com.kkgosu.reasoned.api.ProviderFailure
 import com.kkgosu.reasoned.api.ProviderModel
 import com.kkgosu.reasoned.api.Providers
@@ -267,6 +268,24 @@ class ProviderWireTest {
         val provider = provider("groq")
         assertNull(provider.model("not-a-real-model"))
         assertEquals(listOf<String>(), ProviderModel("x", "x", 1, 0, emptyList()).efforts)
+    }
+
+    @Test fun customEndpointBorrowsCatalogMetadataForACatalogModelId() {
+        Providers.parse(registry)
+        val custom = Provider(
+            id = Connections.CUSTOM, label = "Custom endpoint", wire = Wire.CHAT,
+            baseUrl = "http://10.0.2.2:8765", docs = null, models = emptyList()
+        )
+        assertNull(custom.model("deepseek-flash"))
+        val model = Providers.model(custom.id, "deepseek-flash")!!
+        assertTrue(model.window > 0)
+        assertTrue("max" in model.efforts)
+        assertNull(Providers.model("groq", "deepseek-flash"))
+        val input = JSONArray().put(JSONObject().put("role", "user").put("content", "Teach me"))
+        val canonical = canonicalRequest(model.id, "You teach.", input, JSONArray(), effort = "max", reasoning = true)
+        val request = ChatWire.request(canonical, model, model.id)
+        assertEquals("max", request.getString("reasoning_effort"))
+        assertEquals("enabled", request.getJSONObject("thinking").getString("type"))
     }
 
     @Test fun chatAutoEffortSendsNoReasoningParameter() {

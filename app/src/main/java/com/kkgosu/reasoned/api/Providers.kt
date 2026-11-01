@@ -174,6 +174,16 @@ internal object Providers {
     /** The provider behind a connection, including the ChatGPT plan's OpenAI backend. */
     fun of(connection: String): Provider? = byId(Connections.providerId(connection))
 
+    /**
+     * Metadata for [id] as served by [providerId]. A registry provider answers only for the models
+     * it lists; the custom endpoint lists none of its own and may serve any id, so it borrows the
+     * entry of a registry model with that exact id.
+     */
+    fun model(providerId: String, id: String): ProviderModel? =
+        byId(providerId)?.model(id)
+            ?: if (providerId == Connections.CUSTOM) registry.firstNotNullOfOrNull { it.model(id) }
+            else null
+
     /** What an archived assistant message records for this connection. */
     fun providerName(connection: String) = Connections.providerId(connection)
     fun apiName(connection: String): String =

@@ -8,6 +8,8 @@ import http from 'node:http';
 const DEFAULT_PORT = 8765;
 const HOST = '127.0.0.1';
 const MODEL = 'stub-teach';
+/** A real catalog id, so the custom endpoint can be driven with metadata the app already knows. */
+const CATALOG_MODEL = 'deepseek-flash';
 
 const requestedPort = process.argv[2];
 const port = requestedPort === undefined ? DEFAULT_PORT : Number(requestedPort);
@@ -214,8 +216,14 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${HOST}:${port}`);
 
     if (req.method === 'GET' && url.pathname === '/v1/models') {
-        record(`GET ${url.pathname} 200 models=1`);
-        sendJson(res, 200, { object: 'list', data: [{ id: MODEL, object: 'model' }] });
+        record(`GET ${url.pathname} 200 models=2`);
+        sendJson(res, 200, {
+            object: 'list',
+            data: [
+                { id: MODEL, object: 'model' },
+                { id: CATALOG_MODEL, object: 'model' },
+            ],
+        });
         return;
     }
 

@@ -61,7 +61,7 @@ internal class ModelCatalog(context: Context) {
                 (0 until efforts.length()).map(efforts::getString)
             )
         }
-        return Providers.of(connection)?.model(id)?.let(::model)
+        return Providers.model(Connections.providerId(connection), id)?.let(::model)
     }
 
     private fun model(provider: ProviderModel) =

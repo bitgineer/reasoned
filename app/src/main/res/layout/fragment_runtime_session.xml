@@ -42,8 +42,8 @@
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:foreground="@drawable/transcript_bottom_fade"
-            android:paddingTop="@dimen/space_8"
-            android:paddingBottom="@dimen/space_32"
+            android:paddingTop="@dimen/space_16"
+            android:paddingBottom="@dimen/transcript_bottom_inset"
             android:scrollbars="vertical" />
 
         <ImageButton
@@ -70,7 +70,7 @@
         android:layout_weight="3"
         android:background="@drawable/surface_outline"
         android:orientation="vertical"
-        android:padding="@dimen/space_12"
+        android:padding="@dimen/space_8"
         android:visibility="gone">
 
         <LinearLayout
@@ -103,12 +103,14 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:fillViewport="true">
+            android:fillViewport="true"
+            android:scrollbars="vertical">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:paddingVertical="@dimen/space_8">
 
                 <com.kkgosu.reasoned.ui.text.MarkdownContentView
                     android:layout_width="match_parent"
@@ -202,7 +204,7 @@
             android:background="@android:color/transparent"
             android:gravity="top|start"
             android:hint="@string/runtime_answer_hint"
-            android:maxLines="4"
+            android:maxLines="2"
             android:minLines="1"
             android:visibility="gone" />
 
@@ -214,7 +216,7 @@
             android:background="@android:color/transparent"
             android:gravity="top|start"
             android:hint="@string/runtime_composer_hint"
-            android:maxLines="4"
+            android:maxLines="2"
             android:minLines="1" />
 
         <LinearLayout
@@ -242,7 +244,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:ellipsize="end"
-                        android:maxWidth="180dp"
+                        android:maxWidth="120dp"
                         android:maxLines="1"
                         android:text="@string/runtime_model" />
 
@@ -251,6 +253,7 @@
                         style="@style/Widget.Harness.Button.Composer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:ellipsize="end"
                         android:maxLines="1"
                         android:text="@string/runtime_thinking_auto" />
                 </LinearLayout>
@@ -263,8 +266,8 @@
                 <ProgressBar
                     android:id="@+id/context_progress"
                     style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:layout_gravity="center"
                     android:importantForAccessibility="no"
                     android:indeterminate="false"

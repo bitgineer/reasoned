@@ -283,7 +283,7 @@ class LessonAdapter(private val markdown: io.noties.markwon.Markwon? = null) :
                         topMargin = resources.getDimensionPixelSize(R.dimen.space_8)
                     }
                     background = GradientDrawable().apply {
-                        cornerRadius = resources.getDimension(R.dimen.space_12)
+                        cornerRadius = resources.getDimension(R.dimen.radius_4)
                         setStroke(resources.displayMetrics.density.toInt().coerceAtLeast(1), color)
                         setColor(
                             if (selected) (color and 0x00FFFFFF) or 0x18000000 else context.getColor(

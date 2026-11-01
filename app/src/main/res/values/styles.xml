@@ -147,6 +147,7 @@
     <style name="Widget.Harness.MultiChoice" parent="android:Widget.Material.CompoundButton.CheckBox">
         <item name="android:fontFamily">@font/prose</item>
         <item name="android:textSize">@dimen/text_16</item>
+        <item name="android:lineSpacingMultiplier">1.5</item>
         <item name="android:textColor">@color/foreground</item>
         <item name="android:buttonTint">@color/foreground</item>
         <item name="android:minHeight">@dimen/touch_target</item>
@@ -158,6 +159,7 @@
     <style name="Widget.Harness.Choice" parent="android:Widget.Material.CompoundButton.RadioButton">
         <item name="android:fontFamily">@font/prose</item>
         <item name="android:textSize">@dimen/text_16</item>
+        <item name="android:lineSpacingMultiplier">1.5</item>
         <item name="android:textColor">@color/foreground</item>
         <item name="android:buttonTint">@color/foreground</item>
         <item name="android:minHeight">@dimen/touch_target</item>

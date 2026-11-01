@@ -6,7 +6,7 @@ import android.view.View
 import android.widget.LinearLayout
 import com.kkgosu.reasoned.R
 
-/** Keep native weighted sizing, transferring up to 50 dp from the transcript to the open panel. */
+/** Keep native weighted sizing. The transcript-to-panel transfer is disabled by a 0 dp dimension. */
 class RuntimeSessionLayout(context: Context, attrs: AttributeSet?) : LinearLayout(context, attrs) {
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)

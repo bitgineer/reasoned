@@ -4,7 +4,9 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
 import android.text.InputType
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -122,6 +124,7 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                     app.modelCatalog.forget(connection)
                 }
                 key.text.clear()
+                key.clearFocus()
                 status(if (value.isEmpty()) R.string.runtime_key_absent else R.string.runtime_key_saved)
                 render(views)
             }
@@ -136,6 +139,7 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                     app.modelCatalog.forget(connection)
                 }
                 key.text.clear()
+                key.clearFocus()
                 status(R.string.runtime_key_absent)
                 render(views)
             }
@@ -159,6 +163,8 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
             }
         }
         val searchKey = views.findViewById<EditText>(R.id.research_key)
+        watchKeyField(key)
+        watchKeyField(searchKey)
         views.findViewById<Button>(R.id.research_save_key).setOnClickListener {
             val value = searchKey.text.toString().trim()
             if (value.length !in 16..512 || value.any { it.code !in 33..126 }) searchKey.error =
@@ -167,6 +173,7 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                 app.runtime.stop().join()
                 withContext(Dispatchers.IO) { app.searchCredentials.save(value) }
                 searchKey.text.clear()
+                searchKey.clearFocus()
                 status(R.string.research_key_saved)
                 render(views)
             }
@@ -176,6 +183,7 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                 app.runtime.stop().join()
                 withContext(Dispatchers.IO) { app.searchCredentials.forget() }
                 searchKey.text.clear()
+                searchKey.clearFocus()
                 status(R.string.research_key_absent)
                 render(views)
             }
@@ -373,9 +381,32 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
             active?.connected == true && !state.busy
     }
 
+    /** A key field is sensitive while it holds text or its cursor is in it. */
+    private fun keyFieldActive(): Boolean {
+        val views = pageView ?: return false
+        return listOf(R.id.runtime_key, R.id.research_key).any { id ->
+            views.findViewById<EditText>(id).run { hasFocus() || text.isNotEmpty() }
+        }
+    }
+
+    private fun applySecureFlag(secure: Boolean) {
+        val window = activity?.window ?: return
+        if (secure) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    }
+
+    private fun watchKeyField(field: EditText) {
+        field.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: Editable?) = applySecureFlag(keyFieldActive())
+        })
+        field.setOnFocusChangeListener { _, _ -> applySecureFlag(keyFieldActive()) }
+    }
+
     override fun onShown() {
         super.onShown()
-        activity.window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        applySecureFlag(keyFieldActive())
         val views = pageView ?: return
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
         connection = app.savedConnection()
@@ -420,9 +451,9 @@ class ProviderSettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
     }
 
     override fun onHidden() {
-        pageView?.findViewById<EditText>(R.id.runtime_key)?.text?.clear()
-        pageView?.findViewById<EditText>(R.id.research_key)?.text?.clear()
-        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        pageView?.findViewById<EditText>(R.id.runtime_key)?.apply { text.clear(); clearFocus() }
+        pageView?.findViewById<EditText>(R.id.research_key)?.apply { text.clear(); clearFocus() }
+        applySecureFlag(false)
         dialog?.dismiss(); dialog = null
         scope?.cancel(); scope = null
         modelsJob = null

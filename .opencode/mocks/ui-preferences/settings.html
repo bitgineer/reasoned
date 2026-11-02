@@ -1,0 +1,1318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reasoned · Learning screen appearance</title>
+<style>
+/* Fonts come from the repo when it is opened in place. System stacks take over otherwise. */
+@font-face{font-family:"JetBrains Mono";src:url("../../../app/src/main/res/font/jetbrains_mono_regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"JetBrains Mono";src:url("../../../app/src/main/res/font/jetbrains_mono_medium.ttf") format("truetype");font-weight:500;font-display:swap}
+@font-face{font-family:"Source Sans 3";src:url("../../../app/src/main/res/font/source_sans_regular.ttf") format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Source Sans 3";src:url("../../../app/src/main/res/font/source_sans_bold.ttf") format("truetype");font-weight:700;font-display:swap}
+@font-face{font-family:"CMU Serif";src:url("../../../app/src/main/res/font/cmu_serif_bold.otf") format("opentype");font-weight:700;font-display:swap}
+
+:root{
+  --bg:#141414;
+  --surface:#1C1C1C;
+  --fg:#E6E6E6;
+  --muted:#8D8D8D;
+  --border:#434343;
+  --accent:#2A2A2A;
+  --hairline:#262626;
+  --mono:"JetBrains Mono","Cascadia Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --prose:"Source Sans 3","Source Sans Pro","Segoe UI",system-ui,sans-serif;
+  --serif:"CMU Serif","Iowan Old Style",Georgia,"Times New Roman",serif;
+
+  /* Preview defaults. Only the live preview consumes the overrides below. */
+  --pv-scale:1;
+  --pv-gap:13px;
+  --pv-pad:13px;
+  --pv-opt:48px;
+  --pv-lead:1.5;
+  --pv-measure:44ch;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:var(--prose);
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:var(--fg);color:var(--bg)}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+a{color:inherit}
+
+/* Page shell */
+.page{max-width:1240px;margin:0 auto;padding:44px 28px 84px}
+.masthead{max-width:860px}
+.masthead-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.eyebrow{
+  margin:0;
+  font:500 10px/1.3 var(--mono);
+  letter-spacing:.14em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:6px 11px;
+  font:400 10px/1 var(--mono);
+  color:var(--muted);
+  white-space:nowrap;
+}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--fg)}
+.masthead h1{
+  margin:16px 0 0;
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:clamp(38px,5.2vw,58px);
+  line-height:1.04;
+  letter-spacing:-.015em;
+}
+.lede{max-width:66ch;margin:20px 0 0;color:var(--muted);font-size:17px;line-height:1.55}
+.lede strong{color:var(--fg);font-weight:600}
+.jump{display:flex;gap:22px;flex-wrap:wrap;margin-top:30px;padding-top:18px;border-top:1px solid var(--hairline)}
+.jump a{font:400 11px/1 var(--mono);letter-spacing:.04em;color:var(--muted);text-decoration:none}
+.jump a span{color:var(--border);margin-right:7px}
+.jump a:hover{color:var(--fg)}
+
+.part{margin-top:76px}
+.part-head{max-width:740px}
+.part-head h2{
+  margin:10px 0 0;
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:34px;
+  line-height:1.12;
+  letter-spacing:-.01em;
+}
+.part-head p{margin:12px 0 0;max-width:62ch;color:var(--muted);font-size:15.5px;line-height:1.55}
+
+/* Device frames */
+.workbench{display:flex;align-items:flex-start;justify-content:center;gap:44px;flex-wrap:wrap;margin-top:34px}
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,390px));gap:36px;justify-content:center;margin-top:34px}
+.stage{display:flex;flex-direction:column;gap:10px;width:100%;max-width:390px;min-width:0}
+.stage-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 4px}
+.stage-label{font:500 10px/1.3 var(--mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.live{display:inline-flex;align-items:center;gap:6px;font:400 10px/1 var(--mono);color:var(--muted)}
+.live::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--fg);box-shadow:0 0 0 3px rgba(230,230,230,.08)}
+.stage-note{padding:0 4px;font:400 10.5px/1.4 var(--mono);color:var(--muted)}
+
+.device{
+  width:100%;
+  max-width:390px;
+  height:844px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:28px;
+  box-shadow:0 34px 80px -36px #000,0 1px 0 rgba(255,255,255,.03) inset;
+}
+
+.statusbar{
+  flex:none;
+  height:28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  font:500 10px/1 var(--mono);
+  letter-spacing:.02em;
+  color:var(--muted);
+}
+.status-icons{display:flex;align-items:center;gap:5px;color:var(--muted)}
+.status-icons svg{display:block}
+
+.appbar{
+  flex:none;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 12px 10px;
+  border-bottom:1px solid var(--hairline);
+}
+.iconbtn{
+  flex:none;
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  border-radius:999px;
+  color:var(--muted);
+}
+.iconbtn svg{display:block}
+.appbar-titles{flex:1;min-width:0}
+.appbar-kicker{display:block;font:500 9px/1.2 var(--mono);letter-spacing:.13em;color:var(--muted)}
+.appbar h3{
+  margin:2px 0 0;
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:22px;
+  line-height:1.15;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Settings page inside the phone */
+.settings-scroll{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  padding:6px 20px 10px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border) transparent;
+}
+.settings-scroll::-webkit-scrollbar{width:6px}
+.settings-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:999px}
+.group{border:0;margin:0;padding:0;min-width:0}
+.group-label{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  padding:10px 0 0;
+  font:500 10px/1 var(--mono);
+  letter-spacing:.13em;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.group-label::after{content:"";flex:1;height:1px;background:var(--hairline)}
+.row{border:0;margin:0;padding:6px 0 8px;min-width:0;border-bottom:1px solid var(--hairline)}
+.row:last-of-type{border-bottom:0}
+.row-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  width:100%;
+  padding:0;
+}
+.row-title{font:500 12.5px/1.3 var(--mono);color:var(--fg)}
+.row-value{font:400 10.5px/1.3 var(--mono);color:var(--muted);text-align:right;white-space:nowrap}
+.row-help{margin:2px 0 6px;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.row-body{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:10px;align-items:center}
+
+.segment{
+  display:grid;
+  grid-auto-flow:column;
+  grid-auto-columns:1fr;
+  gap:2px;
+  min-width:0;
+  padding:3px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#101010;
+}
+.segment label{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:40px;
+  padding:0 3px;
+  border-radius:7px;
+  color:var(--muted);
+  font:400 10.5px/1.2 var(--mono);
+  text-align:center;
+  cursor:pointer;
+  transition:background-color 150ms ease,color 150ms ease;
+}
+.segment label:hover{background:var(--surface);color:var(--fg)}
+.segment label:has(input:checked){background:var(--accent);color:var(--fg);box-shadow:inset 0 0 0 1px var(--border)}
+.segment label:has(input:focus-visible){outline:2px solid var(--fg);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Row value text and swatch share the same show rule. */
+.row [data-v]{display:none}
+.row:has(#density-compact:checked) [data-v="density-compact"],
+.row:has(#density-comfortable:checked) [data-v="density-comfortable"],
+.row:has(#density-spacious:checked) [data-v="density-spacious"],
+.row:has(#scale-100:checked) [data-v="scale-100"],
+.row:has(#scale-115:checked) [data-v="scale-115"],
+.row:has(#scale-130:checked) [data-v="scale-130"],
+.row:has(#scale-150:checked) [data-v="scale-150"],
+.row:has(#measure-narrow:checked) [data-v="measure-narrow"],
+.row:has(#measure-standard:checked) [data-v="measure-standard"],
+.row:has(#measure-wide:checked) [data-v="measure-wide"],
+.row:has(#keys-button:checked) [data-v="keys-button"],
+.row:has(#keys-enter:checked) [data-v="keys-enter"],
+.row:has(#keys-ctrl:checked) [data-v="keys-ctrl"],
+.row:has(#dock-full:checked) [data-v="dock-full"],
+.row:has(#dock-model:checked) [data-v="dock-model"],
+.row:has(#dock-composer:checked) [data-v="dock-composer"],
+.row:has(#qs-inline:checked) [data-v="qs-inline"],
+.row:has(#qs-sheet:checked) [data-v="qs-sheet"],
+.row:has(#qs-full:checked) [data-v="qs-full"]{display:block}
+
+.swatch{
+  position:relative;
+  width:52px;
+  height:48px;
+  flex:none;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#101010;
+}
+.swatch .swv{position:absolute;inset:0;display:none}
+.bars{display:flex;flex-direction:column;justify-content:center;gap:var(--bgap);height:100%;padding:0 9px}
+.bars i{display:block;height:2px;border-radius:2px;background:var(--muted)}
+.bars i:nth-child(1){width:100%}
+.bars i:nth-child(2){width:78%}
+.bars i:nth-child(3){width:92%}
+.bars i:nth-child(4){width:64%}
+.fs{display:grid;place-items:center;height:100%;color:var(--fg);font-family:var(--prose);font-weight:400;line-height:1}
+.mw{display:flex;flex-direction:column;justify-content:center;gap:4px;height:100%;padding:0 8px}
+.mw i{display:block;height:2px;border-radius:1px;background:var(--muted);align-self:center}
+.kb{display:flex;align-items:center;justify-content:center;gap:3px;height:100%}
+.swatch kbd{
+  min-width:14px;
+  padding:4px;
+  border:1px solid var(--border);
+  border-radius:3px;
+  background:var(--surface);
+  color:var(--fg);
+  font:400 10px/1 var(--mono);
+  text-align:center;
+}
+.swatch kbd.wide{font-size:7px;padding:4px 3px}
+.kb-t{font:400 8px/1 var(--mono);color:var(--muted)}
+.mini-btn{padding:4px 6px;border-radius:3px;background:var(--fg);color:var(--bg);font:500 8px/1 var(--mono)}
+.mk-dock{
+  position:absolute;
+  left:5px;
+  right:5px;
+  bottom:6px;
+  height:24px;
+  display:flex;
+  align-items:center;
+  gap:3px;
+  padding:0 5px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:var(--surface);
+}
+.mk-chips{display:flex;gap:2px}
+.mk-chips i{width:4px;height:4px;border-radius:1px;background:var(--muted)}
+.mk-line{flex:1;height:2px;border-radius:1px;background:var(--border)}
+.mk-send{width:10px;height:9px;border-radius:2px;background:var(--fg)}
+.mk-page{position:absolute;left:8px;right:8px;top:7px;display:flex;flex-direction:column;gap:3px}
+.mk-page i{display:block;height:2px;border-radius:1px;background:var(--border)}
+.mk-page i:nth-child(1){width:84%}
+.mk-page i:nth-child(2){width:92%}
+.mk-page i:nth-child(3){width:70%}
+.mk-page.dim{opacity:.4}
+.mk-card{position:absolute;left:7px;right:7px;bottom:14px;height:20px;border:1px solid var(--border);border-radius:3px;background:var(--accent)}
+.mk-card::before,.mk-card::after{content:"";position:absolute;left:3px;height:1px;background:var(--muted)}
+.mk-card::before{top:5px;right:20%}
+.mk-card::after{top:10px;right:36%}
+.mk-dockbar{position:absolute;left:7px;right:7px;bottom:6px;height:5px;border:1px solid var(--border);border-radius:2px}
+.mk-sheet{position:absolute;left:6px;right:6px;bottom:0;height:31px;border:1px solid var(--border);border-bottom:0;border-radius:4px 4px 0 0;background:var(--accent)}
+.mk-sheet::before{content:"";position:absolute;left:50%;top:3px;width:10px;height:2px;border-radius:1px;background:var(--border);transform:translateX(-50%)}
+.mk-full{position:absolute;inset:5px;border:1px solid var(--border);border-radius:3px;background:var(--accent)}
+.mk-full i{position:absolute;left:4px;height:2px;border-radius:1px;background:var(--muted)}
+.mk-full .h{top:4px;right:4px;background:var(--border)}
+.mk-full .q{top:8px;right:12px;height:3px}
+.mk-full .o{top:16px;right:4px;height:5px;border:1px solid var(--border);border-radius:2px;background:transparent}
+.mk-full .o2{top:24px;right:4px;height:5px;border:1px solid var(--border);border-radius:2px;background:transparent}
+.mk-full .b{bottom:4px;right:30%;height:5px;background:var(--fg)}
+
+.settings-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0 0}
+.reset{
+  min-height:36px;
+  padding:0 12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:transparent;
+  color:var(--fg);
+  font:400 10.5px/1 var(--mono);
+  cursor:pointer;
+  transition:background-color 150ms ease,transform 120ms ease;
+}
+.reset:hover{background:var(--accent)}
+.reset:active{transform:scale(.96)}
+.reset-note{font:400 10px/1.3 var(--mono);color:var(--muted)}
+
+/* Live preview and the static comparison frames share the session anatomy. */
+.pv-session{flex:1;min-height:0;position:relative;display:flex;flex-direction:column}
+.pv-transcript{flex:1;min-height:0;position:relative;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:14px 20px 0}
+.pv-reading{
+  width:100%;
+  max-width:var(--pv-measure);
+  margin:0 auto;
+  font-size:calc(16px * var(--pv-scale));
+  line-height:var(--pv-lead);
+}
+.pv-reading p{margin:0 0 var(--pv-gap)}
+.pv-reading .pv-h{
+  margin:0 0 8px;
+  font-size:calc(18px * var(--pv-scale));
+  font-weight:700;
+  line-height:1.3;
+  color:var(--fg);
+}
+.pv-reading .formula{
+  display:flex;
+  gap:20px;
+  align-items:baseline;
+  margin:2px 0 var(--pv-gap);
+  font-family:var(--serif);
+  font-size:calc(17px * var(--pv-scale));
+  line-height:1.2;
+  color:var(--fg);
+}
+.pv-reading .formula.rule{font-size:calc(15px * var(--pv-scale));color:var(--muted)}
+.pv-reading .dim{color:var(--muted)}
+.pv-transcript::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:34px;
+  background:linear-gradient(transparent,var(--bg));
+  pointer-events:none;
+}
+
+.q-card{
+  position:relative;
+  z-index:2;
+  flex:none;
+  max-height:58%;
+  margin:6px 12px 0;
+  padding:var(--pv-pad);
+  display:flex;
+  flex-direction:column;
+  overflow:auto;
+  scrollbar-width:none;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+}
+.q-card::-webkit-scrollbar{display:none}
+.q-grabber{display:none;width:36px;height:4px;margin:0 auto 12px;border-radius:999px;background:var(--border);flex:none}
+.q-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;flex:none}
+.q-label{font:500 9.5px/1.3 var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.q-label-full{display:none}
+.q-act{display:flex;align-items:center;gap:8px;flex:none}
+.q-link{
+  padding:5px 7px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  color:var(--muted);
+  font:400 9.5px/1 var(--mono);
+  white-space:nowrap;
+}
+.q-pill{
+  display:none;
+  align-items:center;
+  gap:6px;
+  padding:6px 9px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--fg);
+  font:400 10px/1 var(--mono);
+  white-space:nowrap;
+}
+.q-pill svg{display:block}
+.q-text{margin:0 0 10px;font-size:calc(15px * var(--pv-scale));line-height:1.45;color:var(--fg);text-wrap:pretty}
+.q-opts{display:flex;flex-direction:column;gap:6px}
+.q-opt{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:var(--pv-opt);
+  padding:4px 11px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:calc(14px * var(--pv-scale));
+  line-height:1.35;
+  color:var(--fg);
+}
+.q-radio{
+  flex:none;
+  width:15px;
+  height:15px;
+  border:1.5px solid var(--muted);
+  border-radius:50%;
+}
+.q-conf{display:flex;align-items:center;gap:8px;margin-top:10px;font:500 9px/1 var(--mono);letter-spacing:.08em;color:var(--muted)}
+.q-rail{position:relative;flex:1;height:14px;display:flex;align-items:center;justify-content:space-between}
+.q-rail::before{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:var(--border)}
+.q-dot{position:relative;z-index:1;width:4px;height:4px;border-radius:50%;background:var(--border)}
+.q-dot.on{background:var(--fg)}
+.q-thumb{position:absolute;left:60%;top:50%;z-index:2;width:9px;height:9px;border-radius:50%;background:var(--fg);transform:translate(-50%,-50%)}
+.q-conf b{font-weight:500;color:var(--fg);letter-spacing:.02em}
+
+.think{margin-top:12px}
+.only-overlay{display:none}
+.think-label{display:block;margin-bottom:5px;font:500 9px/1 var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.think-box{
+  min-height:60px;
+  padding:9px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--bg);
+  color:var(--muted);
+  font-size:calc(13.5px * var(--pv-scale));
+  line-height:1.4;
+}
+.think-note{margin-top:6px;font:400 9.5px/1.4 var(--mono);color:var(--muted)}
+.q-actions{display:none;flex-direction:column;gap:7px;margin-top:12px;flex:none}
+.full-key{font:400 9.5px/1.3 var(--mono);color:var(--muted);text-align:right}
+.full-key[data-when]{display:none}
+.submit{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  padding:0 16px;
+  border-radius:8px;
+  background:var(--fg);
+  color:var(--bg);
+  font:500 11px/1 var(--mono);
+  letter-spacing:.02em;
+}
+
+.dock{
+  flex:none;
+  margin:6px 8px 8px;
+  padding:6px 6px 7px;
+  border:1px solid var(--border);
+  border-radius:24px;
+  background:var(--surface);
+}
+.dock-chips{display:flex;align-items:center;gap:5px;min-height:22px;padding:1px 4px 5px}
+.chip{
+  padding:4px 7px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font:400 9.5px/1 var(--mono);
+  color:var(--muted);
+  white-space:nowrap;
+}
+.ctx{
+  width:18px;
+  height:18px;
+  margin-left:auto;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  border-radius:50%;
+  font:400 8px/1 var(--mono);
+  color:var(--muted);
+}
+.composer{display:flex;align-items:center;gap:6px;padding:0 2px}
+.composer-text{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--muted);
+  font-size:calc(13px * var(--pv-scale));
+}
+.kh{
+  display:none;
+  align-items:center;
+  gap:3px;
+  flex:none;
+  padding:4px 5px;
+  border:1px solid var(--hairline);
+  border-radius:5px;
+  color:var(--muted);
+  font:400 9px/1 var(--mono);
+  white-space:nowrap;
+}
+.kh kbd{font:400 9px/1 var(--mono);color:var(--muted)}
+.send{
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:8px;
+  background:var(--fg);
+  color:var(--bg);
+  font:500 10px/1 var(--mono);
+}
+.pv-scrim{
+  position:absolute;
+  inset:0;
+  z-index:15;
+  background:rgba(0,0,0,.56);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 200ms ease;
+}
+
+/* Live bindings. Only .js-preview reads them. */
+body:has(#density-compact:checked) .js-preview{--pv-gap:9px;--pv-pad:11px;--pv-opt:42px;--pv-lead:1.42}
+body:has(#density-spacious:checked) .js-preview{--pv-gap:19px;--pv-pad:16px;--pv-opt:54px;--pv-lead:1.58}
+body:has(#scale-115:checked) .js-preview{--pv-scale:1.15}
+body:has(#scale-130:checked) .js-preview{--pv-scale:1.3}
+body:has(#scale-150:checked) .js-preview{--pv-scale:1.5}
+body:has(#measure-narrow:checked) .js-preview{--pv-measure:36ch}
+body:has(#measure-wide:checked) .js-preview{--pv-measure:56ch}
+
+.js-preview .kh-button,
+.js-preview .full-key-button{display:none}
+body:has(#keys-button:checked) .js-preview .kh-button{display:inline-flex}
+body:has(#keys-enter:checked) .js-preview .kh-enter{display:inline-flex}
+body:has(#keys-ctrl:checked) .js-preview .kh-ctrl{display:inline-flex}
+body:has(#keys-button:checked) .js-preview .full-key-button{display:block}
+body:has(#keys-enter:checked) .js-preview .full-key-enter{display:block}
+body:has(#keys-ctrl:checked) .js-preview .full-key-ctrl{display:block}
+
+body:has(#dock-model:checked) .js-preview .dock-think,
+body:has(#dock-model:checked) .js-preview .dock-ctx,
+body:has(#dock-composer:checked) .js-preview .dock-chips{display:none}
+
+body:has(#qs-sheet:checked) .js-preview .q-card{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:20;
+  max-height:78%;
+  margin:0;
+  padding:18px var(--pv-pad) 16px;
+  border-radius:16px 16px 0 0;
+  overflow:auto;
+  animation:sheet-in 220ms cubic-bezier(.2,0,0,1);
+}
+body:has(#qs-sheet:checked) .js-preview .pv-transcript{justify-content:flex-start}
+body:has(#qs-sheet:checked) .js-preview .q-grabber{display:block}
+body:has(#qs-sheet:checked) .js-preview .only-overlay{display:block}
+body:has(#qs-sheet:checked) .js-preview .q-actions{display:flex}
+body:has(#qs-sheet:checked) .js-preview .pv-scrim{opacity:1}
+
+body:has(#qs-full:checked) .js-preview .pv-transcript{justify-content:flex-start}
+body:has(#qs-full:checked) .js-preview .q-card{
+  position:absolute;
+  inset:0;
+  z-index:30;
+  max-height:none;
+  margin:0;
+  padding:14px 18px 16px;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:var(--bg);
+  animation:full-in 180ms ease-out;
+}
+body:has(#qs-full:checked) .js-preview .q-head{padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--hairline)}
+body:has(#qs-full:checked) .js-preview .q-label-inline{display:none}
+body:has(#qs-full:checked) .js-preview .q-label-full{display:inline}
+body:has(#qs-full:checked) .js-preview .q-link{display:none}
+body:has(#qs-full:checked) .js-preview .q-pill{display:inline-flex}
+body:has(#qs-full:checked) .js-preview .q-scroll{flex:1;min-height:0;overflow:auto;scrollbar-width:none}
+body:has(#qs-full:checked) .js-preview .q-scroll::-webkit-scrollbar{display:none}
+body:has(#qs-full:checked) .js-preview .q-text{font-size:calc(21px * var(--pv-scale));line-height:1.4;margin-bottom:16px}
+body:has(#qs-full:checked) .js-preview .q-opts{gap:8px}
+body:has(#qs-full:checked) .js-preview .q-opt{min-height:54px;font-size:calc(15px * var(--pv-scale))}
+body:has(#qs-full:checked) .js-preview .think-box{min-height:96px}
+body:has(#qs-full:checked) .js-preview .only-overlay{display:block}
+body:has(#qs-full:checked) .js-preview .q-actions{display:flex}
+body:has(#qs-full:checked) .js-preview .pv-scrim{opacity:0}
+
+@keyframes sheet-in{from{opacity:.4;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes full-in{from{opacity:0}to{opacity:1}}
+
+/* Static comparison frames */
+.frame-card{
+  flex:none;
+  max-height:58%;
+  margin:6px 12px 0;
+  padding:13px;
+  display:flex;
+  flex-direction:column;
+  overflow:auto;
+  scrollbar-width:none;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:var(--surface);
+}
+.frame-card::-webkit-scrollbar{display:none}
+.full-static{flex:1;min-height:0;display:flex;flex-direction:column;padding:8px 18px 16px;background:var(--bg)}
+.full-head{padding:8px 0 12px;margin-bottom:14px;border-bottom:1px solid var(--hairline)}
+.full-static .q-pill{display:inline-flex}
+.full-body{flex:1;min-height:0;overflow:auto;scrollbar-width:none}
+.full-body::-webkit-scrollbar{display:none}
+.full-static .q-text{font-size:21px;line-height:1.4;margin-bottom:16px}
+.full-static .q-opts{gap:8px}
+.full-static .q-opt{min-height:54px;font-size:15px}
+.full-static .think-box{min-height:96px}
+.full-static .q-actions{display:flex;flex:none}
+.full-static .full-key{display:block}
+.full-static .q-actions .full-key-enter,.full-static .q-actions .full-key-ctrl{display:none}
+
+/* Spec table and decisions */
+.narrow{max-width:1000px;margin-left:auto;margin-right:auto}
+.panel{margin-top:34px;border:1px solid var(--border);border-radius:16px;background:var(--surface);overflow:hidden}
+.panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:20px 22px 16px;border-bottom:1px solid var(--hairline)}
+.panel-head h3{margin:0;font-family:var(--serif);font-size:22px;line-height:1.15}
+.panel-head p{margin:0;max-width:44ch;font-size:12px;line-height:1.45;color:var(--muted)}
+.spec{width:100%;border-collapse:collapse}
+.spec th{
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  font:500 9.5px/1.2 var(--mono);
+  letter-spacing:.1em;
+  color:var(--muted);
+  text-align:left;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.spec td{padding:12px 14px;border-bottom:1px solid var(--hairline);vertical-align:top;font-size:13px;line-height:1.45}
+.spec tr:last-child td{border-bottom:0}
+.spec .c{font-family:var(--mono);font-size:12px;color:var(--fg);white-space:nowrap}
+.spec .v{font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.6}
+.spec .d{font-family:var(--mono);font-size:11px;color:var(--fg);white-space:nowrap}
+.tag{
+  display:inline-block;
+  padding:4px 7px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font:400 9px/1 var(--mono);
+  letter-spacing:.06em;
+  white-space:nowrap;
+  text-transform:uppercase;
+}
+.tag.keep{color:var(--fg)}
+.tag.cut{color:var(--muted);border-style:dashed}
+.tag.trim{color:var(--fg);border-color:var(--muted)}
+
+.decisions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px}
+.decision{padding:18px 18px 20px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.decision h4{margin:0 0 8px;font:500 10px/1 var(--mono);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.decision p{margin:0 0 10px;font-size:13.5px;line-height:1.55;color:var(--fg)}
+.decision p:last-child{margin-bottom:0;color:var(--muted);font-size:12.5px}
+.decision strong{font-weight:600}
+
+.compare-table{margin-top:18px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface)}
+.compare-table table{width:100%;border-collapse:collapse}
+.compare-table th,.compare-table td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--hairline);font-size:13px;line-height:1.45;vertical-align:top}
+.compare-table tr:last-child td{border-bottom:0}
+.compare-table thead th{font:500 9.5px/1.2 var(--mono);letter-spacing:.1em;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.compare-table tbody th{font:400 11px/1.4 var(--mono);color:var(--muted);white-space:nowrap}
+.compare-table td:last-child{color:var(--fg)}
+
+.recommend{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;margin-top:18px;padding:22px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.recommend h3{margin:0 0 8px;font-family:var(--serif);font-size:22px;line-height:1.2}
+.recommend p{margin:0;font-size:13.5px;line-height:1.6;color:var(--muted)}
+.recommend p strong{color:var(--fg);font-weight:600}
+.recommend ul{margin:0;padding:0;list-style:none}
+.recommend li{padding:0 0 9px 16px;position:relative;font-size:13px;line-height:1.5;color:var(--fg)}
+.recommend li:last-child{padding-bottom:0}
+.recommend li::before{content:"";position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--border)}
+
+.footnote{margin-top:64px;padding-top:18px;border-top:1px solid var(--hairline);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font:400 10.5px/1.6 var(--mono);color:var(--muted)}
+.footnote code{font-family:var(--mono);color:var(--fg)}
+
+@media (max-width:900px){
+  .compare{grid-template-columns:minmax(0,390px)}
+  .decisions{grid-template-columns:1fr}
+  .recommend{grid-template-columns:1fr}
+  .panel-head{flex-direction:column;align-items:flex-start;gap:8px}
+  .spec{display:block;overflow-x:auto;white-space:nowrap}
+  .compare-table{overflow-x:auto}
+}
+@media (max-width:700px){
+  .page{padding:28px 16px 64px}
+  .workbench{gap:32px}
+  .device{height:780px}
+  .part{margin-top:56px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="masthead-top">
+      <p class="eyebrow">Reasoned · UI specimen 01</p>
+      <span class="badge">CSS only</span>
+    </div>
+    <h1>Appearance with a live preview</h1>
+    <p class="lede">Part 1 is a <strong>Learning screen</strong> section for Settings, with six appearance controls and a session preview that updates as you choose. Part 2 puts the same question in the current inline layout and a proposed full-screen card. The transcript stays one tap away. This file is HTML and CSS, with no script and no app changes.</p>
+    <nav class="jump" aria-label="Sections">
+      <a href="#part-1"><span>01</span>Learning screen</a>
+      <a href="#controls"><span>02</span>Control table</a>
+      <a href="#part-2"><span>03</span>Question layout</a>
+      <a href="#decision"><span>04</span>What ships</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="part" id="part-1">
+      <div class="part-head">
+        <p class="eyebrow">Part 1</p>
+        <h2>Learning screen</h2>
+        <p>Change a control in the settings phone. The session phone follows in place. Every row shows its current value beside the label, and a wireframe swatch shows what that value does.</p>
+      </div>
+
+      <form class="workbench" id="appearance-form">
+        <div class="stage">
+          <div class="stage-head">
+            <span class="stage-label">Settings · Learning screen</span>
+          </div>
+          <div class="device" aria-label="Settings page prototype">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="status-icons" aria-hidden="true">
+                <svg width="42" height="10" viewBox="0 0 42 10" fill="none"><rect x="0" y="6" width="2" height="4" rx=".5" fill="currentColor" opacity=".45"/><rect x="4" y="4.5" width="2" height="5.5" rx=".5" fill="currentColor" opacity=".65"/><rect x="8" y="3" width="2" height="7" rx=".5" fill="currentColor"/><path d="M17 8.6a5.4 5.4 0 0 1 7.2 0M18.7 6.7a3 3 0 0 1 3.9 0" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="20.2" cy="9" r=".7" fill="currentColor"/><rect x="32" y="3" width="8" height="5" rx="1.2" stroke="currentColor" stroke-width=".9"/><rect x="33" y="4" width="4" height="3" rx=".5" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div class="appbar">
+              <span class="iconbtn" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4 6.5 10l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div class="appbar-titles">
+                <span class="appbar-kicker">Settings</span>
+                <h3>Learning screen</h3>
+              </div>
+              <span class="iconbtn" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4" r="1.2" fill="currentColor"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/></svg>
+              </span>
+            </div>
+
+            <div class="settings-scroll">
+              <fieldset class="group">
+                <legend class="group-label">Reading</legend>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Density</span>
+                    <span class="row-value">
+                      <span data-v="density-compact">Compact</span>
+                      <span data-v="density-comfortable">Comfortable</span>
+                      <span data-v="density-spacious">Spacious</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">Vertical rhythm in reading, options and cards.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="density" id="density-compact" value="compact"><span>Compact</span></label>
+                      <label><input class="sr" type="radio" name="density" id="density-comfortable" value="comfortable" checked><span>Comfortable</span></label>
+                      <label><input class="sr" type="radio" name="density" id="density-spacious" value="spacious"><span>Spacious</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="density-compact"><span class="bars" style="--bgap:3px"><i></i><i></i><i></i><i></i></span></span>
+                      <span class="swv" data-v="density-comfortable"><span class="bars" style="--bgap:5px"><i></i><i></i><i></i><i></i></span></span>
+                      <span class="swv" data-v="density-spacious"><span class="bars" style="--bgap:8px"><i></i><i></i><i></i><i></i></span></span>
+                    </span>
+                  </div>
+                </fieldset>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Font scale</span>
+                    <span class="row-value">
+                      <span data-v="scale-100">100%</span>
+                      <span data-v="scale-115">115%</span>
+                      <span data-v="scale-130">130%</span>
+                      <span data-v="scale-150">150%</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">Scales reading and question text only.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="scale" id="scale-100" value="100" checked><span>100%</span></label>
+                      <label><input class="sr" type="radio" name="scale" id="scale-115" value="115"><span>115%</span></label>
+                      <label><input class="sr" type="radio" name="scale" id="scale-130" value="130"><span>130%</span></label>
+                      <label><input class="sr" type="radio" name="scale" id="scale-150" value="150"><span>150%</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="scale-100"><span class="fs" style="font-size:12px">Aa</span></span>
+                      <span class="swv" data-v="scale-115"><span class="fs" style="font-size:13px">Aa</span></span>
+                      <span class="swv" data-v="scale-130"><span class="fs" style="font-size:14.5px">Aa</span></span>
+                      <span class="swv" data-v="scale-150"><span class="fs" style="font-size:17px">Aa</span></span>
+                    </span>
+                  </div>
+                </fieldset>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Reading measure</span>
+                    <span class="row-value">
+                      <span data-v="measure-narrow">Narrow · 36ch</span>
+                      <span data-v="measure-standard">Standard · 44ch</span>
+                      <span data-v="measure-wide">Wide · 56ch</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">Line length cap. Mostly matters on wide screens.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="measure" id="measure-narrow" value="narrow"><span>Narrow</span></label>
+                      <label><input class="sr" type="radio" name="measure" id="measure-standard" value="standard" checked><span>Standard</span></label>
+                      <label><input class="sr" type="radio" name="measure" id="measure-wide" value="wide"><span>Wide</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="measure-narrow"><span class="mw"><i style="width:52%"></i><i style="width:64%"></i><i style="width:46%"></i><i style="width:58%"></i></span></span>
+                      <span class="swv" data-v="measure-standard"><span class="mw"><i style="width:76%"></i><i style="width:90%"></i><i style="width:68%"></i><i style="width:84%"></i></span></span>
+                      <span class="swv" data-v="measure-wide"><span class="mw"><i style="width:96%"></i><i style="width:100%"></i><i style="width:92%"></i><i style="width:98%"></i></span></span>
+                    </span>
+                  </div>
+                </fieldset>
+              </fieldset>
+
+              <fieldset class="group">
+                <legend class="group-label">Input</legend>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Keyboard behaviour</span>
+                    <span class="row-value">
+                      <span data-v="keys-button">Send button</span>
+                      <span data-v="keys-enter">Enter</span>
+                      <span data-v="keys-ctrl">Ctrl + Enter</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">How Enter behaves on a hardware keyboard.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="keys" id="keys-button" value="button" checked><span>Button</span></label>
+                      <label><input class="sr" type="radio" name="keys" id="keys-enter" value="enter"><span>Enter</span></label>
+                      <label><input class="sr" type="radio" name="keys" id="keys-ctrl" value="ctrl"><span>Ctrl + Enter</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="keys-button"><span class="kb"><span class="mini-btn">Send</span></span></span>
+                      <span class="swv" data-v="keys-enter"><span class="kb"><kbd>↵</kbd><span class="kb-t">sends</span></span></span>
+                      <span class="swv" data-v="keys-ctrl"><span class="kb"><kbd class="wide">Ctrl</kbd><kbd>↵</kbd></span></span>
+                    </span>
+                  </div>
+                </fieldset>
+              </fieldset>
+
+              <fieldset class="group">
+                <legend class="group-label">Session</legend>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Dock content</span>
+                    <span class="row-value">
+                      <span data-v="dock-full">Full</span>
+                      <span data-v="dock-model">Model only</span>
+                      <span data-v="dock-composer">Composer only</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">Controls shown in the session dock.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="dock" id="dock-full" value="full" checked><span>Full</span></label>
+                      <label><input class="sr" type="radio" name="dock" id="dock-model" value="model"><span>Model</span></label>
+                      <label><input class="sr" type="radio" name="dock" id="dock-composer" value="composer"><span>Composer</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="dock-full"><span class="mk-dock"><span class="mk-chips"><i></i><i></i><i></i></span><span class="mk-line"></span><span class="mk-send"></span></span></span>
+                      <span class="swv" data-v="dock-model"><span class="mk-dock"><span class="mk-chips"><i></i></span><span class="mk-line"></span><span class="mk-send"></span></span></span>
+                      <span class="swv" data-v="dock-composer"><span class="mk-dock"><span class="mk-line"></span><span class="mk-send"></span></span></span>
+                    </span>
+                  </div>
+                </fieldset>
+
+                <fieldset class="row">
+                  <legend class="row-head">
+                    <span class="row-title">Question card</span>
+                    <span class="row-value">
+                      <span data-v="qs-inline">Inline card</span>
+                      <span data-v="qs-sheet">Bottom sheet</span>
+                      <span data-v="qs-full">Full screen</span>
+                    </span>
+                  </legend>
+                  <p class="row-help">Where the question sits while you answer.</p>
+                  <div class="row-body">
+                    <div class="segment">
+                      <label><input class="sr" type="radio" name="question" id="qs-inline" value="inline" checked><span>Inline card</span></label>
+                      <label><input class="sr" type="radio" name="question" id="qs-sheet" value="sheet"><span>Bottom sheet</span></label>
+                      <label><input class="sr" type="radio" name="question" id="qs-full" value="full"><span>Full screen</span></label>
+                    </div>
+                    <span class="swatch" aria-hidden="true">
+                      <span class="swv" data-v="qs-inline"><span class="mk-page"><i></i><i></i><i></i></span><span class="mk-card"></span><span class="mk-dockbar"></span></span>
+                      <span class="swv" data-v="qs-sheet"><span class="mk-page dim"><i></i><i></i><i></i></span><span class="mk-sheet"></span></span>
+                      <span class="swv" data-v="qs-full"><span class="mk-full"><i class="h"></i><i class="q"></i><i class="o"></i><i class="o2"></i><i class="b"></i></span></span>
+                    </span>
+                  </div>
+                </fieldset>
+              </fieldset>
+
+              <div class="settings-footer">
+                <button class="reset" type="reset">Reset to defaults</button>
+                <span class="reset-note">Prototype</span>
+              </div>
+            </div>
+          </div>
+          <p class="stage-note">List rows, grouped. Value and swatch update with the selection.</p>
+        </div>
+
+        <div class="stage">
+          <div class="stage-head">
+            <span class="stage-label">Session preview</span>
+            <span class="live">Live</span>
+          </div>
+          <div class="device js-preview" aria-label="Live session preview">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="status-icons" aria-hidden="true">
+                <svg width="42" height="10" viewBox="0 0 42 10" fill="none"><rect x="0" y="6" width="2" height="4" rx=".5" fill="currentColor" opacity=".45"/><rect x="4" y="4.5" width="2" height="5.5" rx=".5" fill="currentColor" opacity=".65"/><rect x="8" y="3" width="2" height="7" rx=".5" fill="currentColor"/><path d="M17 8.6a5.4 5.4 0 0 1 7.2 0M18.7 6.7a3 3 0 0 1 3.9 0" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="20.2" cy="9" r=".7" fill="currentColor"/><rect x="32" y="3" width="8" height="5" rx="1.2" stroke="currentColor" stroke-width=".9"/><rect x="33" y="4" width="4" height="3" rx=".5" fill="currentColor"/></svg>
+              </span>
+            </div>
+
+            <div class="pv-session">
+              <div class="appbar">
+                <span class="iconbtn" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4 6.5 10l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="appbar-titles">
+                  <span class="appbar-kicker">Waiting for your answer</span>
+                  <h3>Gradient descent</h3>
+                </div>
+                <span class="iconbtn" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4" r="1.2" fill="currentColor"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/></svg>
+                </span>
+              </div>
+
+              <div class="pv-transcript">
+                <div class="pv-reading">
+                  <h4 class="pv-h">Follow the slope.</h4>
+                  <p>How can a local slope guide us toward a minimum?</p>
+                  <p>The derivative tells us which way the function rises. Gradient descent takes a small step against it.</p>
+                  <div class="formula"><span>f(x) = x²</span><span>f′(x) = 2x</span></div>
+                  <p>The update rule repeats that step until the slope flattens.</p>
+                  <div class="formula rule"><span>xₙ₊₁ = xₙ − α · f′(xₙ)</span></div>
+                  <p class="dim">At x = 3 the derivative is 6. With a learning rate of 0.1, the next x is 2.4, a step left toward zero.</p>
+                </div>
+              </div>
+
+              <section class="q-card" aria-label="Question">
+                <span class="q-grabber" aria-hidden="true"></span>
+                <header class="q-head">
+                  <span class="q-label q-label-inline">Question</span>
+                  <span class="q-label q-label-full">Gradient descent · Question</span>
+                  <span class="q-act">
+                    <span class="q-link">Read lesson</span>
+                    <span class="q-pill">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                      Transcript
+                    </span>
+                  </span>
+                </header>
+                <div class="q-scroll">
+                  <p class="q-text">At x = 3, which direction reduces f(x) = x² for a small step?</p>
+                  <div class="q-opts">
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Left, toward zero.</span></span>
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Right, away from zero.</span></span>
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Stay at x = 3.</span></span>
+                  </div>
+                  <div class="q-conf">
+                    <span>Confidence</span>
+                    <span class="q-rail" aria-hidden="true">
+                      <i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot"></i><i class="q-dot"></i>
+                      <span class="q-thumb"></span>
+                    </span>
+                    <b>60</b>
+                  </div>
+                  <div class="think only-overlay">
+                    <span class="think-label">Your thinking</span>
+                    <div class="think-box">Explain your reasoning, or say you don't know</div>
+                    <span class="think-note">Optional. Saved with your answer.</span>
+                  </div>
+                </div>
+                <div class="q-actions">
+                  <span class="full-key full-key-button" data-when="button">Enter adds a line</span>
+                  <span class="full-key full-key-enter" data-when="enter">Enter sends · Shift + Enter adds a line</span>
+                  <span class="full-key full-key-ctrl" data-when="ctrl">Ctrl + Enter sends</span>
+                  <span class="submit">Submit answer</span>
+                </div>
+              </section>
+
+              <div class="dock">
+                <div class="dock-chips">
+                  <span class="chip">Model</span>
+                  <span class="chip dock-think">Thinking · Auto</span>
+                  <span class="ctx dock-ctx">?</span>
+                </div>
+                <div class="composer">
+                  <span class="composer-text">Explain your reasoning</span>
+                  <span class="kh kh-button"><kbd>↵</kbd> new line</span>
+                  <span class="kh kh-enter"><kbd>↵</kbd> sends</span>
+                  <span class="kh kh-ctrl"><kbd>Ctrl</kbd><kbd>↵</kbd></span>
+                  <span class="send">Submit</span>
+                </div>
+              </div>
+
+              <div class="pv-scrim" aria-hidden="true"></div>
+            </div>
+          </div>
+          <p class="stage-note">The card, dock and text scale all follow the settings.</p>
+        </div>
+      </form>
+    </section>
+
+    <section class="narrow" id="controls">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Every control, every value</h3>
+          <p>Defaults match the current build. The last column is the shipping call, not the build order.</p>
+        </div>
+        <table class="spec">
+          <thead>
+            <tr><th>Control</th><th>Allowed values</th><th>Default</th><th>Call</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="c">Density</td>
+              <td class="v">Compact / Comfortable / Spacious</td>
+              <td class="d">Comfortable</td>
+              <td><span class="tag keep">Keep</span></td>
+            </tr>
+            <tr>
+              <td class="c">Font scale</td>
+              <td class="v">100% / 115% / 130% / 150%</td>
+              <td class="d">100%</td>
+              <td><span class="tag keep">Keep</span></td>
+            </tr>
+            <tr>
+              <td class="c">Reading measure</td>
+              <td class="v">Narrow 36ch / Standard 44ch / Wide 56ch</td>
+              <td class="d">Standard 44ch</td>
+              <td><span class="tag cut">Cut</span></td>
+            </tr>
+            <tr>
+              <td class="c">Keyboard behaviour</td>
+              <td class="v">Send button / Enter / Ctrl + Enter</td>
+              <td class="d">Send button</td>
+              <td><span class="tag cut">Cut</span></td>
+            </tr>
+            <tr>
+              <td class="c">Dock content</td>
+              <td class="v">Full / Model only / Composer only</td>
+              <td class="d">Full</td>
+              <td><span class="tag trim">Keep two</span></td>
+            </tr>
+            <tr>
+              <td class="c">Question card</td>
+              <td class="v">Inline card / Bottom sheet / Full screen</td>
+              <td class="d">Inline card</td>
+              <td><span class="tag trim">Keep two</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="decisions">
+        <div class="decision">
+          <h4>Keep</h4>
+          <p><strong>Density</strong> changes the whole rhythm of a session, and small phones need it.</p>
+          <p><strong>Font scale</strong> is the only control that helps a reader who wants larger prose without larger chrome.</p>
+          <p><strong>Question card</strong> is the one choice a learner can feel in the first minute.</p>
+        </div>
+        <div class="decision">
+          <h4>Trim</h4>
+          <p><strong>Dock content</strong> drops from three values to two, Full and Composer. The middle option saves one chip and hides the thinking level.</p>
+          <p><strong>Question card</strong> keeps Inline card and Full screen. The bottom sheet needs the same overlay card and scrim as full screen and returns less room.</p>
+        </div>
+        <div class="decision">
+          <h4>Leave out</h4>
+          <p><strong>Reading measure.</strong> At 390 dp the default already lands near 44ch and 56ch is clamped by the screen. Only Narrow changes anything, and it spends about 56 dp on gutters. The control earns a row on a tablet, not on this phone. Cap prose at 68ch and center it on wide windows instead.</p>
+          <p><strong>Keyboard behaviour.</strong> Touch users press the button. Hardware keyboard users expect Enter to send and Shift + Enter to add a line. A picker asks a question with one good answer per device.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="part" id="part-2">
+      <div class="part-head">
+        <p class="eyebrow">Part 2</p>
+        <h2>Question layout, side by side</h2>
+        <p>The same question, the same session state. The left frame keeps the current inline placement. The right frame lets the card take the screen. The transcript stays one tap away in the top bar.</p>
+      </div>
+
+      <div class="compare">
+        <div class="stage">
+          <div class="stage-head">
+            <span class="stage-label">A · Inline card</span>
+            <span class="live">Default</span>
+          </div>
+          <div class="device" aria-label="Current inline question layout">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="status-icons" aria-hidden="true">
+                <svg width="42" height="10" viewBox="0 0 42 10" fill="none"><rect x="0" y="6" width="2" height="4" rx=".5" fill="currentColor" opacity=".45"/><rect x="4" y="4.5" width="2" height="5.5" rx=".5" fill="currentColor" opacity=".65"/><rect x="8" y="3" width="2" height="7" rx=".5" fill="currentColor"/><path d="M17 8.6a5.4 5.4 0 0 1 7.2 0M18.7 6.7a3 3 0 0 1 3.9 0" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="20.2" cy="9" r=".7" fill="currentColor"/><rect x="32" y="3" width="8" height="5" rx="1.2" stroke="currentColor" stroke-width=".9"/><rect x="33" y="4" width="4" height="3" rx=".5" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div class="pv-session">
+              <div class="appbar">
+                <span class="iconbtn" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M12.5 4 6.5 10l6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div class="appbar-titles">
+                  <span class="appbar-kicker">Waiting for your answer</span>
+                  <h3>Gradient descent</h3>
+                </div>
+                <span class="iconbtn" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="4" r="1.2" fill="currentColor"/><circle cx="9" cy="9" r="1.2" fill="currentColor"/><circle cx="9" cy="14" r="1.2" fill="currentColor"/></svg>
+                </span>
+              </div>
+              <div class="pv-transcript">
+                <div class="pv-reading">
+                  <h4 class="pv-h">Follow the slope.</h4>
+                  <p>How can a local slope guide us toward a minimum?</p>
+                  <p>The derivative tells us which way the function rises. Gradient descent takes a small step against it.</p>
+                  <div class="formula"><span>f(x) = x²</span><span>f′(x) = 2x</span></div>
+                  <p>The update rule repeats that step until the slope flattens.</p>
+                  <div class="formula rule"><span>xₙ₊₁ = xₙ − α · f′(xₙ)</span></div>
+                  <p class="dim">At x = 3 the derivative is 6. With a learning rate of 0.1, the next x is 2.4, a step left toward zero.</p>
+                </div>
+              </div>
+
+              <section class="frame-card" aria-label="Inline question">
+                <header class="q-head">
+                  <span class="q-label">Question</span>
+                  <span class="q-act"><span class="q-link">Read lesson</span></span>
+                </header>
+                <div class="q-scroll">
+                  <p class="q-text">At x = 3, which direction reduces f(x) = x² for a small step?</p>
+                  <div class="q-opts">
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Left, toward zero.</span></span>
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Right, away from zero.</span></span>
+                    <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Stay at x = 3.</span></span>
+                  </div>
+                  <div class="q-conf">
+                    <span>Confidence</span>
+                    <span class="q-rail" aria-hidden="true">
+                      <i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot"></i><i class="q-dot"></i>
+                      <span class="q-thumb"></span>
+                    </span>
+                    <b>60</b>
+                  </div>
+                </div>
+              </section>
+
+              <div class="dock">
+                <div class="dock-chips">
+                  <span class="chip">Model</span>
+                  <span class="chip">Thinking · Auto</span>
+                  <span class="ctx">?</span>
+                </div>
+                <div class="composer">
+                  <span class="composer-text">Explain your reasoning</span>
+                  <span class="kh kh-enter" style="display:inline-flex"><kbd>↵</kbd> new line</span>
+                  <span class="send">Submit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="stage-note">Reading keeps its place above the question. Answer and context share the dock.</p>
+        </div>
+
+        <div class="stage">
+          <div class="stage-head">
+            <span class="stage-label">B · Full-screen card</span>
+            <span class="live">Proposed</span>
+          </div>
+          <div class="device" aria-label="Full-screen question layout">
+            <div class="statusbar">
+              <span>9:41</span>
+              <span class="status-icons" aria-hidden="true">
+                <svg width="42" height="10" viewBox="0 0 42 10" fill="none"><rect x="0" y="6" width="2" height="4" rx=".5" fill="currentColor" opacity=".45"/><rect x="4" y="4.5" width="2" height="5.5" rx=".5" fill="currentColor" opacity=".65"/><rect x="8" y="3" width="2" height="7" rx=".5" fill="currentColor"/><path d="M17 8.6a5.4 5.4 0 0 1 7.2 0M18.7 6.7a3 3 0 0 1 3.9 0" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><circle cx="20.2" cy="9" r=".7" fill="currentColor"/><rect x="32" y="3" width="8" height="5" rx="1.2" stroke="currentColor" stroke-width=".9"/><rect x="33" y="4" width="4" height="3" rx=".5" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div class="full-static">
+              <header class="q-head full-head">
+                <span class="q-label">Gradient descent · Question</span>
+                <span class="q-pill">
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+                  Transcript
+                </span>
+              </header>
+              <div class="full-body">
+                <p class="q-text">At x = 3, which direction reduces f(x) = x² for a small step?</p>
+                <div class="q-opts">
+                  <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Left, toward zero.</span></span>
+                  <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Right, away from zero.</span></span>
+                  <span class="q-opt"><span class="q-radio" aria-hidden="true"></span><span>Stay at x = 3.</span></span>
+                </div>
+                <div class="q-conf">
+                  <span>Confidence</span>
+                  <span class="q-rail" aria-hidden="true">
+                    <i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot on"></i><i class="q-dot"></i><i class="q-dot"></i>
+                    <span class="q-thumb"></span>
+                  </span>
+                  <b>60</b>
+                </div>
+                <div class="think">
+                  <span class="think-label">Your thinking</span>
+                  <div class="think-box">Explain your reasoning, or say you don't know</div>
+                  <span class="think-note">Optional. Saved with your answer.</span>
+                </div>
+              </div>
+              <div class="q-actions">
+                <span class="full-key">Enter adds a line</span>
+                <span class="submit">Submit answer</span>
+              </div>
+            </div>
+          </div>
+          <p class="stage-note">The card takes the column. The top bar holds the single exit back to the transcript.</p>
+        </div>
+      </div>
+
+      <div class="narrow">
+        <div class="compare-table">
+          <table>
+            <thead>
+              <tr><th></th><th>A · Inline card</th><th>B · Full screen</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Reading while answering</th><td>Always visible</td><td>One tap away</td></tr>
+              <tr><th>Question room</th><td>About a third of the column, shared with reading and dock</td><td>The whole column, including the answer field</td></tr>
+              <tr><th>Answer surface</th><td>Split across the card and the dock</td><td>One card, one submit</td></tr>
+              <tr><th>At 150% text</th><td>Reading shrinks, dock stays</td><td>Everything fits without scrolling</td></tr>
+              <tr><th>Leaving the question</th><td>Read lesson collapses the card</td><td>Transcript in the top bar</td></tr>
+              <tr><th>Failure mode</th><td>Dock and card compete for height</td><td>Loses the passage you were reading</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="recommend" id="decision">
+          <div>
+            <h3>Ship inline as the default. Offer full screen.</h3>
+            <p><strong>Full screen is not the default</strong> because losing the passage is the most common failure in a learning question. The transcript pill makes it recoverable in one tap, but recovery is not the same as presence. Use full screen when the question text is long or the reader has raised the font scale. Cut the bottom sheet. It needs the same overlay card and scrim as full screen and returns less room.</p>
+          </div>
+          <ul>
+            <li>Inline for the default path</li>
+            <li>Full screen for focus and large type</li>
+            <li>No sheet, no third layout to maintain</li>
+            <li>One answer surface per mode</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footnote">
+    <span>Throwaway prototype. Not app source. No script, no build, no persistence.</span>
+    <span><code>.opencode/mocks/ui-preferences/settings.html</code></span>
+  </footer>
+</div>
+</body>
+</html>

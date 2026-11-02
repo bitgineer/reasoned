@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Densidad, medida y escala · Reasoned</title>
+<style>
+  :root {
+    --page: #0c0c0c;
+    --panel: #101010;
+    --bg: #141414;
+    --surface: #1c1c1c;
+    --ink: #e6e6e6;
+    --muted: #8d8d8d;
+    --border: #434343;
+    --accent: #2a2a2a;
+    --hair: #262626;
+    --warn: #eab308;
+    --bad: #ef4444;
+    --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+    --sans: "Source Sans 3", "Source Sans Pro", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "JetBrains Mono", "Cascadia Mono", Consolas, "SF Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--page); color-scheme: dark; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button, input { font: inherit; }
+
+  .label {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .page {
+    max-width: 1560px;
+    margin: 0 auto;
+    padding: 24px 20px 40px;
+  }
+
+  /* Page masthead */
+
+  .masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .masthead h1 {
+    margin: 10px 0 8px;
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(30px, 3.2vw, 44px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .mast-note {
+    max-width: 64ch;
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .mast-state {
+    flex: none;
+    min-width: 236px;
+    padding: 11px 13px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  .mast-state strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    align-items: start;
+    gap: 28px;
+    padding-top: 24px;
+  }
+
+  /* Settings panel mock */
+
+  .prefs {
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 20px;
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    background: var(--panel);
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a3a transparent;
+  }
+
+  .prefs::-webkit-scrollbar { width: 6px; }
+  .prefs::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  .prefs-title {
+    margin: 8px 0 6px;
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.12;
+  }
+
+  .prefs-note {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .controls {
+    margin-top: 18px;
+    border-top: 1px solid var(--hair);
+  }
+
+  .control {
+    padding: 15px 0;
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .control-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .control-value {
+    flex: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1.4;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .control-help {
+    margin: 4px 0 10px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+    text-wrap: pretty;
+  }
+
+  .seg {
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
+  .seg-row {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    min-height: 48px;
+    padding: 9px 12px;
+    cursor: pointer;
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .seg-row + .seg-row { border-top: 1px solid var(--accent); }
+  .seg-row:hover { background: #202020; }
+  .seg-row:has(input:checked) { background: var(--accent); }
+
+  .seg-row input {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 2px 0 0;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+  }
+
+  .seg-row input:checked {
+    background: radial-gradient(circle, var(--ink) 0 4.5px, transparent 5px);
+  }
+
+  .seg-row input:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  [contenteditable]:focus-visible,
+  .transcript:focus-visible,
+  .q-scroll:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  .seg-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .seg-name {
+    font-size: 14px;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .seg-meta {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .summary {
+    margin-top: 16px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+  }
+
+  .summary-value {
+    margin: 6px 0 0;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  .summary-note {
+    margin: 6px 0 12px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .reset {
+    width: 100%;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1), border-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .reset:hover { background: var(--accent); border-color: var(--muted); }
+  .reset:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Stage and device frames */
+
+  .stage { min-width: 0; }
+
+  .stage-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 2px;
+  }
+
+  .stage-note {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .stage-legend {
+    max-width: 34ch;
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    line-height: 1.55;
+    text-align: right;
+  }
+
+  .stage-scroll {
+    overflow-x: auto;
+    padding: 16px 2px 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .frames {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    width: max-content;
+  }
+
+  .device {
+    margin: 0;
+    width: calc(var(--frame-w) + 10px);
+  }
+
+  .device-cap {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 2px 8px;
+  }
+
+  .dp {
+    flex: none;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+
+  .combo {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.4;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  .device-shell {
+    padding: 5px;
+    border-radius: 27px;
+    background: #080808;
+    box-shadow: 0 0 0 1px #242424, 0 18px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  .device-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+    min-height: 56px;
+    padding: 10px 2px 0;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .chip[data-level="warn"] { color: var(--warn); border-color: rgba(234, 179, 8, 0.4); }
+  .chip[data-level="bad"] { color: var(--bad); border-color: rgba(239, 68, 68, 0.45); }
+
+  .foot-tags { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+
+  .tag + .tag::before {
+    content: "·";
+    margin-right: 4px;
+    color: var(--border);
+  }
+
+  .foot-metrics {
+    flex: 1 1 100%;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    line-height: 1.5;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    text-wrap: pretty;
+  }
+
+  /* Phone frame */
+
+  .phone {
+    --fs: 1;
+    --gutter: 24px;
+    --stack: 16px;
+    --card-pad: 8px;
+    --opt-gap: 8px;
+    --panel-inset: 16px;
+    --shell-inset: 8px;
+    --dock-x: 4px;
+    --dock-y: 8px;
+    --measure-ch: 999;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: var(--frame-w);
+    height: 940px;
+    overflow: hidden;
+    border-radius: 22px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+  }
+
+  .phone[data-density="compact"] {
+    --gutter: 16px;
+    --stack: 8px;
+    --card-pad: 4px;
+    --opt-gap: 4px;
+    --panel-inset: 8px;
+    --shell-inset: 4px;
+    --dock-x: 4px;
+    --dock-y: 6px;
+  }
+
+  .phone[data-density="roomy"] {
+    --gutter: 32px;
+    --stack: 24px;
+    --card-pad: 12px;
+    --opt-gap: 12px;
+    --panel-inset: 24px;
+    --shell-inset: 12px;
+    --dock-x: 8px;
+    --dock-y: 12px;
+  }
+
+  .phone[data-measure="narrow"] { --measure-ch: 24; }
+  .phone[data-measure="medium"] { --measure-ch: 32; }
+  .phone[data-measure="wide"] { --measure-ch: 999; }
+
+  .measure-probe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: calc(var(--measure-ch) * 1ch);
+    height: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .statusbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+    padding: 0 14px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .sb-right { display: flex; align-items: center; gap: 6px; }
+
+  .sb-signal {
+    display: flex;
+    align-items: flex-end;
+    gap: 1px;
+    height: 8px;
+  }
+
+  .sb-signal i { width: 2px; border-radius: 1px; background: var(--muted); }
+  .sb-signal i:nth-child(1) { height: 3px; }
+  .sb-signal i:nth-child(2) { height: 5px; }
+  .sb-signal i:nth-child(3) { height: 8px; }
+
+  .sb-batt {
+    position: relative;
+    width: 16px;
+    height: 8px;
+    border: 1px solid var(--muted);
+    border-radius: 2px;
+  }
+
+  .sb-batt::before {
+    content: "";
+    position: absolute;
+    inset: 1px;
+    width: 9px;
+    border-radius: 1px;
+    background: var(--muted);
+  }
+
+  .sb-batt::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    right: -3px;
+    width: 2px;
+    height: 4px;
+    border-radius: 1px;
+    background: var(--muted);
+  }
+
+  .appbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 56px;
+    padding: 6px var(--gutter) 6px max(4px, calc(var(--gutter) - 12px));
+    border-bottom: 1px solid var(--border);
+  }
+
+  .icon-btn {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 24px;
+    background: transparent;
+    color: var(--ink);
+  }
+
+  .icon-btn:hover { background: var(--accent); }
+
+  .appbar h2 {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--serif);
+    font-size: calc(25px * var(--fs));
+    font-weight: 700;
+    line-height: 1.12;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .statusline {
+    flex: none;
+    padding: 6px var(--gutter) 8px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: calc(11px * var(--fs));
+    line-height: 1.4;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-wrap: pretty;
+  }
+
+  .transcript-wrap {
+    position: relative;
+    flex: 2 1 0;
+    min-height: 0;
+  }
+
+  .transcript {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-top: 8px;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+  }
+
+  .transcript::-webkit-scrollbar { display: none; }
+
+  .scroll-btn {
+    position: absolute;
+    right: 12px;
+    bottom: 8px;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .scroll-btn:hover { background: var(--accent); }
+
+  .turn { padding: 0 var(--gutter) var(--stack); }
+
+  .measure {
+    width: 100%;
+    max-width: calc(var(--measure-ch) * 1ch);
+    margin-inline: auto;
+  }
+
+  .lesson-h {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: calc(22px * var(--fs));
+    font-weight: 700;
+    line-height: 1.16;
+    text-wrap: balance;
+  }
+
+  .prose {
+    margin: var(--stack) 0 0;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .formula {
+    margin: var(--stack) 0 0;
+    font-family: var(--serif);
+    font-size: calc(20px * var(--fs));
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+
+  .math {
+    font-family: var(--serif);
+    font-size: 1.05em;
+  }
+
+  .turn-divider {
+    height: 1px;
+    margin: 0 var(--gutter) var(--stack);
+    background: var(--border);
+  }
+
+  .learner {
+    margin-top: var(--stack);
+    padding: var(--stack) var(--gutter);
+    border-left: 3px solid var(--border);
+    background: var(--surface);
+  }
+
+  .learner p {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: calc(16px * var(--fs));
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  /* Question card */
+
+  .qcard {
+    flex: 3 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0 var(--panel-inset);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+  }
+
+  .q-head {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 var(--card-pad) 0 calc(var(--card-pad) + 4px);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: calc(12.5px * var(--fs));
+    line-height: 1.2;
+  }
+
+  .btn-secondary {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .btn-secondary:hover { background: var(--accent); }
+
+  .q-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--card-pad) var(--card-pad);
+    scrollbar-width: none;
+  }
+
+  .q-scroll::-webkit-scrollbar { display: none; }
+
+  .q-scroll.has-more {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  }
+
+  .q-body {
+    max-width: calc(var(--measure-ch) * 1ch);
+    margin-inline: auto;
+  }
+
+  .q-text {
+    margin: 0;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--opt-gap);
+    margin: var(--stack) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+  }
+
+  .option.is-selected { background: var(--accent); }
+
+  .radio {
+    position: relative;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+
+  .option.is-selected .radio::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--ink);
+  }
+
+  .dont-know {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    margin-top: 8px;
+    padding: 0 8px;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+  }
+
+  .check {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--ink);
+    border-radius: 2px;
+  }
+
+  .confidence {
+    margin-top: 12px;
+    padding: 0 8px;
+  }
+
+  .conf-track {
+    position: relative;
+    height: 4px;
+    margin-top: 8px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  .conf-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 60%;
+    border-radius: 2px;
+    background: var(--ink);
+  }
+
+  .conf-thumb {
+    position: absolute;
+    top: 50%;
+    left: 60%;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--ink);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Composer dock */
+
+  .dock {
+    flex: none;
+    margin: 8px var(--shell-inset) 6px;
+  }
+
+  .dock-shell {
+    padding: var(--dock-y) var(--dock-x);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    background: var(--surface);
+    transition: border-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .dock-shell:focus-within { border-color: var(--ink); }
+
+  .dock-input {
+    min-height: calc(1.5em + 8px);
+    max-height: calc(3em + 8px);
+    overflow-y: auto;
+    padding: 4px 12px;
+    font-size: calc(16px * var(--fs));
+    line-height: 1.5;
+    color: var(--ink);
+    outline: none;
+    overflow-wrap: anywhere;
+  }
+
+  .dock-input:empty::before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+  }
+
+  .dock-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .chip-strip {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .chip-strip.has-more {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 14px), transparent);
+  }
+
+  .chip-strip::-webkit-scrollbar { display: none; }
+
+  .dock-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: calc(12.5px * var(--fs));
+    white-space: nowrap;
+  }
+
+  .dock-chip:hover { background: var(--accent); }
+
+  .ctx {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+  }
+
+  .ctx::before {
+    content: "";
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: conic-gradient(var(--ink) 0 42%, var(--border) 42% 100%);
+  }
+
+  .ctx::after {
+    content: "";
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface);
+  }
+
+  .ctx span {
+    position: relative;
+    z-index: 1;
+    font-family: var(--mono);
+    font-size: calc(11px * var(--fs));
+    line-height: 1;
+  }
+
+  .send {
+    flex: none;
+    min-width: 48px;
+    min-height: 48px;
+    margin-left: 4px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: calc(12.5px * var(--fs));
+    cursor: pointer;
+  }
+
+  .send:disabled { opacity: 0.4; cursor: default; }
+
+  .dock-note {
+    margin: 4px 12px 0;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: calc(11px * var(--fs));
+    line-height: 1.4;
+    text-wrap: pretty;
+  }
+
+  .gesturebar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    height: 20px;
+  }
+
+  .gesturebar span {
+    width: 108px;
+    height: 4px;
+    border-radius: 2px;
+    background: #3a3a3a;
+  }
+
+  /* Report footer */
+
+  .page-foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 28px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hair);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .page-foot p { margin: 0; max-width: 80ch; }
+
+  @media (max-width: 1180px) {
+    .workspace { grid-template-columns: 1fr; }
+    .prefs { position: static; max-height: none; }
+    .masthead { align-items: flex-start; }
+    .mast-state { min-width: 200px; }
+  }
+
+  @media (max-width: 760px) {
+    .masthead { flex-direction: column; }
+    .stage-head { flex-direction: column; align-items: flex-start; }
+    .stage-legend { text-align: left; }
+    .page-foot { flex-direction: column; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div>
+      <p class="label">Reasoned · Exploración de diseño</p>
+      <h1>Densidad, medida y escala.</h1>
+      <p class="mast-note">La misma sesión de aprendizaje en tres anchos. Ajusta las preferencias a la izquierda y observa qué cambia, qué se oculta y qué deja de funcionar.</p>
+    </div>
+    <div class="mast-state">
+      <span class="label">Ahora</span>
+      <strong data-combo>Cómoda · Ancha · 100%</strong>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="prefs" aria-label="Preferencias de lectura">
+      <p class="label">Ajustes de sesión</p>
+      <h2 class="prefs-title">Cómo lees</h2>
+      <p class="prefs-note">Tres preferencias sobre la misma pantalla. Nada se guarda.</p>
+
+      <div class="controls">
+        <div class="control" role="group" aria-labelledby="density-label">
+          <div class="control-head">
+            <span class="label" id="density-label">Densidad</span>
+            <span class="control-value" data-value-for="density">Cómoda</span>
+          </div>
+          <p class="control-help">Márgenes, separación entre bloques y alto de las opciones.</p>
+          <div class="seg">
+            <label class="seg-row">
+              <input type="radio" name="density" value="compact">
+              <span class="seg-body">
+                <span class="seg-name">Compacta</span>
+                <span class="seg-meta">16 dp · 4 dp entre opciones</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="density" value="comfortable" checked>
+              <span class="seg-body">
+                <span class="seg-name">Cómoda</span>
+                <span class="seg-meta">24 dp · 8 dp entre opciones</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="density" value="roomy">
+              <span class="seg-body">
+                <span class="seg-name">Amplia</span>
+                <span class="seg-meta">32 dp · 12 dp entre opciones</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control" role="group" aria-labelledby="measure-label">
+          <div class="control-head">
+            <span class="label" id="measure-label">Medida</span>
+            <span class="control-value" data-value-for="measure">Ancha</span>
+          </div>
+          <p class="control-help">Ancho máximo de la prosa y de las opciones, medido en caracteres.</p>
+          <div class="seg">
+            <label class="seg-row">
+              <input type="radio" name="measure" value="narrow">
+              <span class="seg-body">
+                <span class="seg-name">Angosta</span>
+                <span class="seg-meta">≈ 24 caracteres por línea</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="measure" value="medium">
+              <span class="seg-body">
+                <span class="seg-name">Media</span>
+                <span class="seg-meta">≈ 32 caracteres por línea</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="measure" value="wide" checked>
+              <span class="seg-body">
+                <span class="seg-name">Ancha</span>
+                <span class="seg-meta">Sin tope, columna completa</span>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control" role="group" aria-labelledby="scale-label">
+          <div class="control-head">
+            <span class="label" id="scale-label">Escala</span>
+            <span class="control-value" data-value-for="scale">100%</span>
+          </div>
+          <p class="control-help">Tamaño del texto. Los objetivos táctiles no bajan de 48 dp.</p>
+          <div class="seg">
+            <label class="seg-row">
+              <input type="radio" name="scale" value="100" checked>
+              <span class="seg-body">
+                <span class="seg-name">100%</span>
+                <span class="seg-meta">Tamaño base</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="scale" value="125">
+              <span class="seg-body">
+                <span class="seg-name">125%</span>
+                <span class="seg-meta">Texto grande</span>
+              </span>
+            </label>
+            <label class="seg-row">
+              <input type="radio" name="scale" value="150">
+              <span class="seg-body">
+                <span class="seg-name">150%</span>
+                <span class="seg-meta">Texto máximo</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary">
+        <p class="label">Combinación actual</p>
+        <p class="summary-value" data-combo>Cómoda · Ancha · 100%</p>
+        <p class="summary-note">Los tres marcos se actualizan al instante.</p>
+        <button class="reset" id="reset" type="button">Restablecer</button>
+      </div>
+    </aside>
+
+    <section class="stage" aria-label="Marcos de teléfono">
+      <div class="stage-head">
+        <div>
+          <p class="label">La misma sesión · tres anchos</p>
+          <p class="stage-note">Alto fijo de 940 px. El texto recompone; la barra, la tarjeta y el dock compiten por el alto.</p>
+        </div>
+        <p class="stage-legend">Desplaza dentro de la lección o de la pregunta.</p>
+      </div>
+
+      <div class="stage-scroll">
+        <div class="frames">
+
+          <figure class="device" style="--frame-w: 320px">
+            <figcaption class="device-cap">
+              <span class="dp">320 dp</span>
+              <span class="combo" data-combo>Cómoda · Ancha · 100%</span>
+            </figcaption>
+            <div class="device-shell">
+              <div class="phone-host" data-width="320"></div>
+            </div>
+            <div class="device-foot">
+              <span class="chip" data-level="ok" data-chip>Cabe</span>
+              <span class="foot-tags" data-tags></span>
+              <span class="foot-metrics" data-metrics></span>
+            </div>
+          </figure>
+
+          <figure class="device" style="--frame-w: 360px">
+            <figcaption class="device-cap">
+              <span class="dp">360 dp</span>
+              <span class="combo" data-combo>Cómoda · Ancha · 100%</span>
+            </figcaption>
+            <div class="device-shell">
+              <div class="phone-host" data-width="360"></div>
+            </div>
+            <div class="device-foot">
+              <span class="chip" data-level="ok" data-chip>Cabe</span>
+              <span class="foot-tags" data-tags></span>
+              <span class="foot-metrics" data-metrics></span>
+            </div>
+          </figure>
+
+          <figure class="device" style="--frame-w: 411px">
+            <figcaption class="device-cap">
+              <span class="dp">411 dp</span>
+              <span class="combo" data-combo>Cómoda · Ancha · 100%</span>
+            </figcaption>
+            <div class="device-shell">
+              <div class="phone-host" data-width="411"></div>
+            </div>
+            <div class="device-foot">
+              <span class="chip" data-level="ok" data-chip>Cabe</span>
+              <span class="foot-tags" data-tags></span>
+              <span class="foot-metrics" data-metrics></span>
+            </div>
+          </figure>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="page-foot">
+    <p>Los marcos comparten contenido y preferencias. La escala no cambia el ancho del teléfono, solo el texto y el espacio que consume.</p>
+    <span class="label">Mock estático · sin modelo</span>
+  </footer>
+</div>
+
+<template id="session-template">
+  <div class="phone" data-density="comfortable" data-measure="wide">
+    <span class="measure-probe" aria-hidden="true"></span>
+
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="sb-right" aria-hidden="true">
+        <span class="sb-signal"><i></i><i></i><i></i></span>
+        <span class="sb-batt"></span>
+      </span>
+    </div>
+
+    <header class="appbar">
+      <button class="icon-btn" type="button" aria-label="Volver">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M15 5 8 12l7 7"/>
+        </svg>
+      </button>
+      <h2>La derivada</h2>
+    </header>
+
+    <div class="statusline">Enseñanza · Lección 3 de 7</div>
+
+    <div class="transcript-wrap">
+      <div class="transcript" tabindex="0" role="region" aria-label="Transcripción de la lección">
+        <article class="turn">
+          <div class="measure">
+            <h3 class="lesson-h">La pendiente de un instante</h3>
+            <p class="prose">La derivada no mide un cambio promedio. Mide la pendiente de la curva en un instante. Si la posición es <span class="math">s(t) = 3t² − 2t</span>, la velocidad es su derivada.</p>
+            <p class="formula">s′(t) = 6t − 2</p>
+            <p class="prose">En <span class="math">t = 2 s</span> la velocidad es 10 m/s. Un segundo antes era 4 m/s. La pendiente cambia con el instante.</p>
+          </div>
+        </article>
+
+        <div class="turn-divider"></div>
+
+        <div class="learner">
+          <p class="label">Tu nota</p>
+          <p>Entendí que primero derivo y después sustituyo.</p>
+        </div>
+      </div>
+
+      <button class="scroll-btn" type="button" aria-label="Ir al último mensaje">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </button>
+    </div>
+
+    <section class="qcard" aria-label="Pregunta de la lección">
+      <div class="q-head">
+        <span class="label">Pregunta</span>
+        <button class="btn btn-secondary" type="button">Leer lección</button>
+      </div>
+
+      <div class="q-scroll" tabindex="0" role="group" aria-label="Contenido de la pregunta">
+        <div class="q-body">
+          <p class="q-text">Una partícula se mueve según <span class="math">s(t) = 3t² − 2t</span>. ¿Cuál es su velocidad instantánea en <span class="math">t = 2 s</span>?</p>
+
+          <ul class="q-options" aria-label="Opciones de respuesta">
+            <li class="option is-selected">
+              <span class="radio" aria-hidden="true"></span>
+              <span>10 m/s</span>
+            </li>
+            <li class="option">
+              <span class="radio" aria-hidden="true"></span>
+              <span>14 m/s</span>
+            </li>
+            <li class="option">
+              <span class="radio" aria-hidden="true"></span>
+              <span>8 m/s</span>
+            </li>
+            <li class="option">
+              <span class="radio" aria-hidden="true"></span>
+              <span>6 m/s</span>
+            </li>
+          </ul>
+
+          <div class="dont-know">
+            <span class="check" aria-hidden="true"></span>
+            <span>No lo sé</span>
+          </div>
+
+          <div class="confidence">
+            <span class="label">Confianza · 60%</span>
+            <div class="conf-track" aria-hidden="true">
+              <span class="conf-fill"></span>
+              <span class="conf-thumb"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="dock">
+      <div class="dock-shell">
+        <div class="dock-input" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Tu respuesta" data-placeholder="Explica tu razonamiento o di que no lo sabes"></div>
+        <div class="dock-row">
+          <div class="chip-strip">
+            <button class="dock-chip" type="button">Modelo</button>
+            <button class="dock-chip" type="button">Auto</button>
+          </div>
+          <div class="ctx" aria-hidden="true"><span>?</span></div>
+          <button class="send" type="button" disabled>Enviar</button>
+        </div>
+        <p class="dock-note">El envío puede añadir uso a tu cuenta.</p>
+      </div>
+    </div>
+
+    <div class="gesturebar" aria-hidden="true"><span></span></div>
+  </div>
+</template>
+
+<script type="application/json" id="diagnostics">{}</script>
+
+<script>
+(() => {
+  const DENSITY = { compact: "Compacta", comfortable: "Cómoda", roomy: "Amplia" };
+  const MEASURE = { narrow: "Angosta", medium: "Media", wide: "Ancha" };
+  const DEFAULTS = { density: "comfortable", measure: "wide", scale: 100 };
+  const allowed = {
+    density: Object.keys(DENSITY),
+    measure: Object.keys(MEASURE),
+    scale: ["100", "125", "150"]
+  };
+
+  const params = new URLSearchParams(location.search);
+  const comboParam = (params.get("combo") || "").split(",").map(part => part.trim());
+  const read = (key, index, fallback) => {
+    const direct = params.get(key);
+    if (allowed[key].includes(direct)) return key === "scale" ? Number(direct) : direct;
+    const fromCombo = comboParam[index];
+    if (allowed[key].includes(fromCombo)) return key === "scale" ? Number(fromCombo) : fromCombo;
+    return fallback;
+  };
+  const state = {
+    density: read("density", 0, DEFAULTS.density),
+    measure: read("measure", 1, DEFAULTS.measure),
+    scale: read("scale", 2, DEFAULTS.scale)
+  };
+
+  const all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const button = (selector, root = document) => root.querySelector(selector);
+
+  const template = document.getElementById("session-template");
+  all("[data-width]").forEach(host => {
+    const clone = template.content.cloneNode(true);
+    host.appendChild(clone);
+    host.querySelector(".phone").dataset.width = host.dataset.width;
+  });
+
+  function setScrollFade(scroller) {
+    const more = scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 2;
+    scroller.classList.toggle("has-more", more);
+  }
+
+  function setHorizontalFade(strip) {
+    const more = strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 2;
+    strip.classList.toggle("has-more", more);
+  }
+
+  all(".q-scroll").forEach(scroller => {
+    scroller.addEventListener("scroll", () => setScrollFade(scroller), { passive: true });
+  });
+
+  all(".chip-strip").forEach(strip => {
+    strip.addEventListener("scroll", () => setHorizontalFade(strip), { passive: true });
+  });
+
+  function comboText() {
+    return `${DENSITY[state.density]} · ${MEASURE[state.measure]} · ${state.scale}%`;
+  }
+
+  function apply(syncUrl = true) {
+    all(".phone").forEach(phone => {
+      phone.dataset.density = state.density;
+      phone.dataset.measure = state.measure;
+      phone.style.setProperty("--fs", String(state.scale / 100));
+    });
+
+    const combo = comboText();
+    all("[data-combo]").forEach(node => { node.textContent = combo; });
+
+    all("[data-value-for]").forEach(node => {
+      const key = node.dataset.valueFor;
+      node.textContent = key === "scale" ? `${state.scale}%` : (key === "density" ? DENSITY : MEASURE)[state[key]];
+    });
+
+    all("input[type=radio]").forEach(input => {
+      input.checked = String(state[input.name]) === input.value;
+    });
+
+    if (syncUrl) {
+      try {
+        history.replaceState(null, "", `?${new URLSearchParams(state).toString()}`);
+      } catch (error) {
+        /* file URLs can refuse history updates; the mock still works */
+      }
+    }
+
+    renderReport(measureFrames());
+  }
+
+  function measureFrames() {
+    return all(".device").map(device => {
+      const phone = button(".phone", device);
+      const qScroll = button(".q-scroll", phone);
+      const transcript = button(".transcript", phone);
+      const qRect = qScroll.getBoundingClientRect();
+
+      const options = all(".option", phone);
+      const visible = options.filter(option => {
+        const rect = option.getBoundingClientRect();
+        return rect.top >= qRect.top - 1 && rect.bottom <= qRect.bottom + 1;
+      }).length;
+
+      const scrollStyle = getComputedStyle(qScroll);
+      const padding = parseFloat(scrollStyle.paddingLeft) + parseFloat(scrollStyle.paddingRight);
+      const available = qScroll.clientWidth - padding;
+      const cap = button(".measure-probe", phone).getBoundingClientRect().width;
+      const title = button(".appbar h2", phone);
+      const header = button(".q-head", phone);
+      const chips = button(".chip-strip", phone);
+
+      return {
+        width: Number(phone.dataset.width),
+        visibleOptions: visible,
+        totalOptions: options.length,
+        column: Math.round(button(".q-body", phone).getBoundingClientRect().width),
+        available: Math.round(available),
+        measureCap: Math.round(cap),
+        measureBinding: state.measure === "wide" ? null : cap < available - 8,
+        questionHidden: Math.max(0, Math.round(qScroll.scrollHeight - qScroll.clientHeight)),
+        transcriptHeight: Math.round(button(".transcript-wrap", phone).getBoundingClientRect().height),
+        qcardHeight: Math.round(button(".qcard", phone).getBoundingClientRect().height),
+        qViewport: Math.round(qScroll.clientHeight),
+        cardLeft: Math.round(button(".qcard", phone).getBoundingClientRect().left - phone.getBoundingClientRect().left),
+        qLeft: Math.round(button(".q-text", phone).getBoundingClientRect().left - phone.getBoundingClientRect().left),
+        proseLeft: Math.round(button(".prose", phone).getBoundingClientRect().left - phone.getBoundingClientRect().left),
+        titleClipped: title.scrollWidth > title.clientWidth + 1,
+        headerHeight: Math.round(header.getBoundingClientRect().height),
+        chipsScroll: chips.scrollWidth > chips.clientWidth + 1,
+        overflowX: qScroll.scrollWidth > qScroll.clientWidth + 1 || transcript.scrollWidth > transcript.clientWidth + 1
+      };
+    });
+  }
+
+  function levelFor(frame) {
+    if (frame.overflowX) return ["bad", "Desborda"];
+    if (frame.visibleOptions <= 1) return ["bad", `${frame.visibleOptions}/${frame.totalOptions} opciones`];
+    if (frame.visibleOptions < frame.totalOptions) return ["warn", `${frame.visibleOptions}/${frame.totalOptions} opciones`];
+    if (frame.transcriptHeight < 96) return ["warn", "Lección oculta"];
+    if (frame.titleClipped || frame.headerHeight > 64 || frame.chipsScroll) return ["warn", "Revisar"];
+    return ["ok", `${frame.totalOptions}/${frame.totalOptions} opciones`];
+  }
+
+  function renderReport(frames) {
+    all(".device").forEach((device, index) => {
+      const frame = frames[index];
+      const [level, text] = levelFor(frame);
+
+      const chip = button("[data-chip]", device);
+      chip.dataset.level = level;
+      chip.textContent = text;
+
+      const tags = [];
+      if (frame.measureBinding === false) tags.push("medida sin efecto");
+      if (frame.titleClipped) tags.push("título cortado");
+      if (frame.headerHeight > 64) tags.push("cabecera 2 líneas");
+      if (frame.chipsScroll) tags.push("chips desplazan");
+
+      button("[data-tags]", device).replaceChildren(...tags.map(tag => {
+        const node = document.createElement("span");
+        node.className = "tag";
+        node.textContent = tag;
+        return node;
+      }));
+
+      button("[data-metrics]", device).textContent =
+        `${frame.visibleOptions}/${frame.totalOptions} opciones · col ${frame.column} px · lección ${frame.transcriptHeight} px · oculto ${frame.questionHidden} px`;
+
+      const scroller = button(".q-scroll", device);
+      scroller.scrollTop = Math.min(scroller.scrollTop, Math.max(0, scroller.scrollHeight - scroller.clientHeight));
+      setScrollFade(scroller);
+      setHorizontalFade(button(".chip-strip", device));
+    });
+
+    document.getElementById("diagnostics").textContent = JSON.stringify({
+      state: { ...state },
+      frames
+    });
+  }
+
+  all("input[type=radio]").forEach(input => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      state[input.name] = input.name === "scale" ? Number(input.value) : input.value;
+      apply();
+    });
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    Object.assign(state, DEFAULTS);
+    apply();
+  });
+
+  document.addEventListener("input", event => {
+    const input = event.target.closest ? event.target.closest(".dock-input") : null;
+    if (!input) return;
+    if (!input.textContent.trim()) input.innerHTML = "";
+    const send = input.closest(".dock-shell").querySelector(".send");
+    send.disabled = !input.textContent.trim();
+  });
+
+  apply(false);
+})();
+</script>
+</body>
+</html>

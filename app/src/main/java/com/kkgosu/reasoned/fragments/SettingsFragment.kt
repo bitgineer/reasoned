@@ -154,6 +154,11 @@ class SettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                         R.string.settings_learning_summary
                     ),
                     Triple(
+                        R.id.settings_ui,
+                        R.string.settings_ui,
+                        R.string.settings_ui_summary
+                    ),
+                    Triple(
                         R.id.settings_transfer,
                         R.string.settings_transfer,
                         R.string.settings_transfer_summary
@@ -187,6 +192,8 @@ class SettingsFragment : ToolbarFragment(R.layout.fragment_shell) {
                 }
                 views.findViewById<Button>(R.id.settings_learning)
                     .setOnClickListener { openPage("learning") }
+                views.findViewById<Button>(R.id.settings_ui)
+                    .setOnClickListener { Nav.go(activity, UiPreferencesFragment::class.java, null) }
                 views.findViewById<Button>(R.id.settings_about)
                     .setOnClickListener { openPage("about") }
             }

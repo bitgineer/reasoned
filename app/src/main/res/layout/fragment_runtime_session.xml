@@ -224,9 +224,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:baselineAligned="false"
-            android:gravity="center_vertical">
+            android:gravity="end|center_vertical">
 
             <HorizontalScrollView
+                android:id="@+id/dock_model_row"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"

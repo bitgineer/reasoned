@@ -43,8 +43,12 @@ import com.kkgosu.reasoned.controllers.extractionStatus
 import com.kkgosu.reasoned.model.LessonDisplayItem.Role
 import com.kkgosu.reasoned.model.NativeQuestion
 import com.kkgosu.reasoned.model.RuntimeSession
+import com.kkgosu.reasoned.storage.UiPreferenceStore
 import com.kkgosu.reasoned.storage.extractionUsage
 import com.kkgosu.reasoned.storage.uncovered
+import com.kkgosu.reasoned.ui.DockWhileTyping
+import com.kkgosu.reasoned.ui.KeyboardBehaviour
+import com.kkgosu.reasoned.ui.UiPreferences
 import com.kkgosu.reasoned.ui.adapters.LessonAdapter
 import com.kkgosu.reasoned.ui.adapters.confidenceColor
 import com.kkgosu.reasoned.ui.text.lessonMarkdown
@@ -60,6 +64,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.grishka.appkit.Nav
 import me.grishka.appkit.fragments.ToolbarFragment
+import kotlin.math.roundToInt
 
 class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     private class SessionViews(val root: View) {
@@ -83,6 +88,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         val collapseQuestion: Button = root.findViewById(R.id.collapse_question)
         val sessionModel: Button = root.findViewById(R.id.session_model)
         val sessionThinking: Button = root.findViewById(R.id.session_thinking)
+        val dockModelRow: View = root.findViewById(R.id.dock_model_row)
         val sessionContext: Button = root.findViewById(R.id.session_context)
         val contextProgress: ProgressBar = root.findViewById(R.id.context_progress)
         val scrollButton: View = root.findViewById(R.id.scroll_to_bottom)
@@ -97,6 +103,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     private var loadingModels = false
     private var imeAnimations = 0
     private var imeVisible = false
+    private var ui = UiPreferences.DEFAULT
     private var followingTail = false
     private val app get() = activity.application as ReasonedApplication
     private val sample get() = BuildConfig.DEBUG && arguments?.getBoolean("sample") == true
@@ -257,6 +264,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         setTitle(if (sample) R.string.sample_session_title else R.string.runtime_session_title)
         val views = SessionViews(inflater.inflate(R.layout.fragment_runtime_session, container, false))
         pageViews = views
+        loadUiPreferences()
         markdown = lessonMarkdown(inflater.context)
         adapter = LessonAdapter(markdown)
         val list = views.lessonList
@@ -397,6 +405,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
         super.onShown()
         toolbar.navigationContentDescription = getString(R.string.navigation_open)
         val views = pageViews ?: return
+        loadUiPreferences()
         val start = arguments!!.getBoolean("start_session")
         arguments!!.remove("start_session") // One explicit start, never replayed by reopening/recreation.
         val opened = runtime.open(sessionId)
@@ -443,6 +452,33 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Returning from Settings applies changes without recreating the session screen.
+        loadUiPreferences()
+    }
+
+    private fun loadUiPreferences() {
+        ui = UiPreferenceStore(activity.applicationContext).load()
+        val views = pageViews ?: return
+        applySpacing(views)
+        updateTranscriptVisibility()
+    }
+
+    private fun applySpacing(views: SessionViews) {
+        val spacing = ui.density.spacing
+        fun scaled(dp: Int) = (dp * spacing).roundToInt()
+        // Only dp padding scales here; text sizes stay fixed.
+        views.lessonList.setPadding(
+            views.lessonList.paddingLeft,
+            scaled(resources.getDimensionPixelSize(R.dimen.space_16)),
+            views.lessonList.paddingRight,
+            scaled(resources.getDimensionPixelSize(R.dimen.transcript_bottom_inset))
+        )
+        val panel = scaled(resources.getDimensionPixelSize(R.dimen.space_8))
+        views.questionPanel.setPadding(panel, panel, panel, panel)
     }
 
     override fun onHidden() {
@@ -890,8 +926,31 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     /** An open question card takes the transcript's half while the keyboard holds the other. */
     private fun updateTranscriptVisibility() {
         val views = pageViews ?: return
-        views.lessonTranscript.visibility =
-            if (imeVisible && views.questionPanel.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        val active = imeVisible && views.questionPanel.visibility == View.VISIBLE
+        val behaviour = if (active) ui.keyboard else KeyboardBehaviour.KEEP
+        when (behaviour) {
+            KeyboardBehaviour.KEEP -> {
+                views.lessonTranscript.alpha = 1f
+                views.lessonTranscript.visibility = View.VISIBLE
+            }
+
+            KeyboardBehaviour.HIDE -> {
+                views.lessonTranscript.alpha = 1f
+                views.lessonTranscript.visibility = View.GONE
+            }
+
+            KeyboardBehaviour.DIM -> {
+                views.lessonTranscript.alpha = 0.35f
+                views.lessonTranscript.visibility = View.VISIBLE
+            }
+        }
+        updateDockVisibility(views)
+    }
+
+    private fun updateDockVisibility(views: SessionViews) {
+        val hide = ui.dock == DockWhileTyping.HIDE && imeVisible && views.questionPanel.visibility == View.VISIBLE
+        // The row keeps its actions end-aligned, so only the model and thinking buttons leave.
+        views.dockModelRow.visibility = if (hide) View.GONE else View.VISIBLE
     }
 
     private fun updateScrollButton(views: SessionViews) {

@@ -20,11 +20,13 @@ android {
 
     buildFeatures {
         buildConfig true
+        resValues true
     }
 
     buildTypes {
         debug {
             applicationIdSuffix ".debug"
+            resValue "string", "app_name", "Reasoned QA"
         }
         release {
             optimization {

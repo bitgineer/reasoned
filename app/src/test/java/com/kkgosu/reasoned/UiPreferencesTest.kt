@@ -54,6 +54,15 @@ class UiPreferencesTest {
     }
 
     @Test
+    fun roomyStopsApplyingAtLargeFontScales() {
+        assertEquals(Density.ROOMY, Density.ROOMY.atFontScale(1f))
+        assertEquals(Density.COMFORTABLE, Density.ROOMY.atFontScale(1.3f))
+        assertEquals(Density.COMFORTABLE, Density.ROOMY.atFontScale(2f))
+        assertEquals(Density.COMFORTABLE, Density.COMFORTABLE.atFontScale(2f))
+        assertEquals(Density.COMPACT, Density.COMPACT.atFontScale(2f))
+    }
+
+    @Test
     fun densityMultipliersScaleAndRoundDp() {
         assertEquals(0.75f, Density.COMPACT.spacing, 0f)
         assertEquals(1f, Density.COMFORTABLE.spacing, 0f)

@@ -8,8 +8,14 @@ enum class Density(val id: String, val spacing: Float) {
     COMFORTABLE("comfortable", 1f),
     ROOMY("roomy", 1.25f);
 
+    /** Roomy's extra spacing crowds a large-font screen, so it falls back at 1.3x text. */
+    fun atFontScale(fontScale: Float): Density =
+        if (this == ROOMY && fontScale >= ROOMY_FONT_SCALE_LIMIT) COMFORTABLE else this
+
     companion object {
         val DEFAULT = COMFORTABLE
+
+        private const val ROOMY_FONT_SCALE_LIMIT = 1.3f
 
         fun parse(value: String?): Density =
             entries.firstOrNull { it.id.equals(value, ignoreCase = true) } ?: DEFAULT

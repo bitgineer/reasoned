@@ -29,7 +29,7 @@
     <string name="settings_ui">Learning screen</string>
     <string name="settings_ui_summary">Spacing, keyboard and dock behaviour</string>
     <string name="settings_ui_density">Spacing</string>
-    <string name="settings_ui_density_note">Compact tightens the spacing.\nComfortable keeps the current spacing.\nRoomy adds more space.</string>
+    <string name="settings_ui_density_note">Compact tightens the spacing.\nComfortable keeps the current spacing.\nRoomy adds more space. Roomy is reduced when the system font is very large.</string>
     <string name="settings_ui_density_compact">Compact</string>
     <string name="settings_ui_density_comfortable">Comfortable</string>
     <string name="settings_ui_density_roomy">Roomy</string>

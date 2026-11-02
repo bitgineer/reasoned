@@ -468,7 +468,7 @@ class RuntimeSessionFragment : ToolbarFragment(R.layout.fragment_shell) {
     }
 
     private fun applySpacing(views: SessionViews) {
-        val spacing = ui.density.spacing
+        val spacing = ui.density.atFontScale(resources.configuration.fontScale).spacing
         fun scaled(dp: Int) = (dp * spacing).roundToInt()
         // Only dp padding scales here; text sizes stay fixed.
         views.lessonList.setPadding(
